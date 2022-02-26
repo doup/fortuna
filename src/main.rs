@@ -1,7 +1,18 @@
 use bevy::prelude::*;
+use bevy_asset_loader::{AssetCollection, AssetLoader};
 
 fn main() {
-    App::new()
+    let mut app = App::new();
+
+    // Add asset loader
+    AssetLoader::new(GameState::Loading)
+        .continue_to_state(GameState::MainMenu)
+        .with_collection::<UIAssets>()
+        // .with_collection::<ImageAssets>()
+        // .with_collection::<AudioAssets>()
+        .build(&mut app);
+
+    app
         // RESOURCES
         .insert_resource(WindowDescriptor {
             title: "Fortuna".to_string(),
@@ -36,6 +47,7 @@ fn main() {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum GameState {
+    Loading,
     MainMenu,
     Game,
     Result,
@@ -45,6 +57,12 @@ enum GameState {
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+
+#[derive(AssetCollection)]
+struct UIAssets {
+    #[asset(path = "GoudyBookletter1911.otf")]
+    font: Handle<Font>,
+}
 
 // COMPONENTS
 #[derive(Component)]
@@ -67,12 +85,11 @@ struct RestartButton;
 //     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 // }
 
-fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("GoudyBookletter1911.otf");
-
+fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
     commands
         .spawn_bundle(UiCameraBundle::default())
         .insert(MainMenuUI);
+
     commands
         .spawn_bundle(ButtonBundle {
             style: Style {
@@ -93,7 +110,7 @@ fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                     text: Text::with_section(
                         "Play",
                         TextStyle {
-                            font: font.clone(),
+                            font: ui_assets.font.clone(),
                             font_size: 40.0,
                             color: Color::rgb(0.9, 0.9, 0.9),
                         },
@@ -124,7 +141,7 @@ fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                     text: Text::with_section(
                         "Re-Roll",
                         TextStyle {
-                            font,
+                            font: ui_assets.font.clone(),
                             font_size: 40.0,
                             color: Color::rgb(0.9, 0.9, 0.9),
                         },
@@ -192,9 +209,7 @@ fn setup_game(mut app_state: ResMut<State<GameState>>) {
 }
 
 // RESULT
-fn setup_result(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("GoudyBookletter1911.otf");
-
+fn setup_result(mut commands: Commands, ui_assets: Res<UIAssets>) {
     commands
         .spawn_bundle(UiCameraBundle::default())
         .insert(ResultUI);
@@ -219,7 +234,7 @@ fn setup_result(mut commands: Commands, asset_server: Res<AssetServer>) {
                     text: Text::with_section(
                         "Restart",
                         TextStyle {
-                            font: font.clone(),
+                            font: ui_assets.font.clone(),
                             font_size: 40.0,
                             color: Color::rgb(0.9, 0.9, 0.9),
                         },
