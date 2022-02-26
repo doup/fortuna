@@ -11,39 +11,40 @@ fn main() {
         .add_plugins(DefaultPlugins)
         // GENERAL
         // .add_startup_system(setup_camera)
-        .add_state(AppState::MainMenu)
+        .add_state(GameState::MainMenu) // Initial State
         // MAIN MENU
-        .add_system_set(SystemSet::on_enter(AppState::MainMenu).with_system(setup_main_menu))
+        .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_main_menu))
         .add_system_set(
-            SystemSet::on_update(AppState::MainMenu)
+            SystemSet::on_update(GameState::MainMenu)
                 .with_system(handle_ui_buttons)
                 .with_system(handle_play_button)
                 .with_system(handle_reroll_button),
         )
-        .add_system_set(SystemSet::on_exit(AppState::MainMenu).with_system(close_main_menu))
+        .add_system_set(SystemSet::on_exit(GameState::MainMenu).with_system(close_main_menu))
         // GAME
-        .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup_game))
+        .add_system_set(SystemSet::on_enter(GameState::Game).with_system(setup_game))
         // RESULT
-        .add_system_set(SystemSet::on_enter(AppState::Result).with_system(setup_result))
+        .add_system_set(SystemSet::on_enter(GameState::Result).with_system(setup_result))
         .add_system_set(
-            SystemSet::on_update(AppState::Result)
+            SystemSet::on_update(GameState::Result)
                 .with_system(handle_ui_buttons)
                 .with_system(handle_restart_button),
         )
-        .add_system_set(SystemSet::on_exit(AppState::Result).with_system(close_result))
+        .add_system_set(SystemSet::on_exit(GameState::Result).with_system(close_result))
         .run();
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
-
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-enum AppState {
+enum GameState {
     MainMenu,
     Game,
     Result,
 }
+
+// Resources
+const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 // COMPONENTS
 #[derive(Component)]
@@ -163,13 +164,13 @@ fn handle_ui_buttons(
 }
 
 fn handle_play_button(
-    mut app_state: ResMut<State<AppState>>,
+    mut app_state: ResMut<State<GameState>>,
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<PlayButton>)>,
 ) {
     for interaction in interaction_query.iter() {
         if *interaction == Interaction::Clicked {
             println!("Play clicked");
-            app_state.set(AppState::Game).unwrap();
+            app_state.set(GameState::Game).unwrap();
         }
     }
 }
@@ -185,9 +186,9 @@ fn handle_reroll_button(
 }
 
 // GAME
-fn setup_game(mut app_state: ResMut<State<AppState>>) {
+fn setup_game(mut app_state: ResMut<State<GameState>>) {
     println!("Game started… aaaand finished. Moving to Result state.");
-    app_state.set(AppState::Result).unwrap();
+    app_state.set(GameState::Result).unwrap();
 }
 
 // RESULT
@@ -231,12 +232,12 @@ fn setup_result(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn handle_restart_button(
-    mut app_state: ResMut<State<AppState>>,
+    mut app_state: ResMut<State<GameState>>,
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<RestartButton>)>,
 ) {
     for interaction in interaction_query.iter() {
         if *interaction == Interaction::Clicked {
-            app_state.set(AppState::MainMenu).unwrap();
+            app_state.set(GameState::MainMenu).unwrap();
         }
     }
 }
