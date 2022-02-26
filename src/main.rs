@@ -2,6 +2,11 @@ use bevy::prelude::*;
 
 fn main() {
     App::new()
+        // RESOURCES
+        .insert_resource(WindowDescriptor {
+            title: "Fortuna".to_string(),
+            ..Default::default()
+        })
         // PLUGINS
         .add_plugins(DefaultPlugins)
         // GENERAL
