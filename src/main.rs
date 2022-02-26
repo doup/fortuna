@@ -2,18 +2,30 @@ use bevy::prelude::*;
 
 fn main() {
     App::new()
+        // PLUGINS
         .add_plugins(DefaultPlugins)
-        // General
+        // GENERAL
         // .add_startup_system(setup_camera)
         .add_state(AppState::MainMenu)
-        // Main Menu
+        // MAIN MENU
         .add_system_set(SystemSet::on_enter(AppState::MainMenu).with_system(setup_main_menu))
-        .add_system_set(SystemSet::on_update(AppState::MainMenu).with_system(handle_ui_buttons))
-        .add_system_set(SystemSet::on_update(AppState::MainMenu).with_system(handle_play_button))
-        .add_system_set(SystemSet::on_update(AppState::MainMenu).with_system(handle_reroll_button))
+        .add_system_set(
+            SystemSet::on_update(AppState::MainMenu)
+                .with_system(handle_ui_buttons)
+                .with_system(handle_play_button)
+                .with_system(handle_reroll_button),
+        )
         .add_system_set(SystemSet::on_exit(AppState::MainMenu).with_system(close_main_menu))
-        // Game
-        // Result
+        // GAME
+        .add_system_set(SystemSet::on_enter(AppState::Game).with_system(setup_game))
+        // RESULT
+        .add_system_set(SystemSet::on_enter(AppState::Result).with_system(setup_result))
+        .add_system_set(
+            SystemSet::on_update(AppState::Result)
+                .with_system(handle_ui_buttons)
+                .with_system(handle_restart_button),
+        )
+        .add_system_set(SystemSet::on_exit(AppState::Result).with_system(close_result))
         .run();
 }
 
@@ -24,7 +36,7 @@ const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum AppState {
     MainMenu,
-    InGame,
+    Game,
     Result,
 }
 
@@ -33,15 +45,21 @@ enum AppState {
 struct MainMenuUI;
 
 #[derive(Component)]
-struct PlayUI;
+struct ResultUI;
 
 #[derive(Component)]
-struct ReRollUI;
+struct PlayButton;
+
+#[derive(Component)]
+struct ReRollButton;
+
+#[derive(Component)]
+struct RestartButton;
 
 // SYSTEMS
-fn setup_camera(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-}
+// fn setup_camera(mut commands: Commands) {
+//     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+// }
 
 fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("GoudyBookletter1911.otf");
@@ -61,7 +79,7 @@ fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
             color: NORMAL_BUTTON.into(),
             ..Default::default()
         })
-        .insert(PlayUI)
+        .insert(PlayButton)
         .insert(MainMenuUI)
         .with_children(|parent| {
             parent
@@ -92,7 +110,7 @@ fn setup_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
             color: NORMAL_BUTTON.into(),
             ..Default::default()
         })
-        .insert(ReRollUI)
+        .insert(ReRollButton)
         .insert(MainMenuUI)
         .with_children(|parent| {
             parent
@@ -141,22 +159,85 @@ fn handle_ui_buttons(
 
 fn handle_play_button(
     mut app_state: ResMut<State<AppState>>,
-    interaction_query: Query<&Interaction, (Changed<Interaction>, With<PlayUI>)>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<PlayButton>)>,
 ) {
     for interaction in interaction_query.iter() {
         if *interaction == Interaction::Clicked {
             println!("Play clicked");
-            app_state.set(AppState::InGame).unwrap();
+            app_state.set(AppState::Game).unwrap();
         }
     }
 }
 
 fn handle_reroll_button(
-    interaction_query: Query<&Interaction, (Changed<Interaction>, With<ReRollUI>)>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<ReRollButton>)>,
 ) {
     for interaction in interaction_query.iter() {
         if *interaction == Interaction::Clicked {
             println!("ReRoll clicked");
         }
+    }
+}
+
+// GAME
+fn setup_game(mut app_state: ResMut<State<AppState>>) {
+    println!("Game started… aaaand finished. Moving to Result state.");
+    app_state.set(AppState::Result).unwrap();
+}
+
+// RESULT
+fn setup_result(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load("GoudyBookletter1911.otf");
+
+    commands
+        .spawn_bundle(UiCameraBundle::default())
+        .insert(ResultUI);
+
+    commands
+        .spawn_bundle(ButtonBundle {
+            style: Style {
+                size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                margin: Rect::all(Val::Auto),            // center button
+                justify_content: JustifyContent::Center, // horizontally center child text
+                align_items: AlignItems::Center,         // vertically center child text
+                ..Default::default()
+            },
+            color: NORMAL_BUTTON.into(),
+            ..Default::default()
+        })
+        .insert(RestartButton)
+        .insert(ResultUI)
+        .with_children(|parent| {
+            parent
+                .spawn_bundle(TextBundle {
+                    text: Text::with_section(
+                        "Restart",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 40.0,
+                            color: Color::rgb(0.9, 0.9, 0.9),
+                        },
+                        Default::default(),
+                    ),
+                    ..Default::default()
+                })
+                .insert(ResultUI);
+        });
+}
+
+fn handle_restart_button(
+    mut app_state: ResMut<State<AppState>>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<RestartButton>)>,
+) {
+    for interaction in interaction_query.iter() {
+        if *interaction == Interaction::Clicked {
+            app_state.set(AppState::MainMenu).unwrap();
+        }
+    }
+}
+
+fn close_result(mut commands: Commands, buttons: Query<Entity, With<ResultUI>>) {
+    for entity in buttons.iter() {
+        commands.entity(entity).despawn();
     }
 }
