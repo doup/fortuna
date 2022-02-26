@@ -22,7 +22,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         // GENERAL
         // .add_startup_system(setup_camera)
-        .add_state(GameState::MainMenu) // Initial State
+        .add_state(GameState::Loading) // Initial State
         // MAIN MENU
         .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_main_menu))
         .add_system_set(
