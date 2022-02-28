@@ -3,6 +3,7 @@ use doup_fortuna::FortunaPlugin;
 
 fn main() {
     App::new()
+        .insert_resource(Msaa { samples: 1 })
         .insert_resource(WindowDescriptor {
             title: "Fortuna".to_string(),
             ..Default::default()

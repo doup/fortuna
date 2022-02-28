@@ -12,6 +12,8 @@ impl Plugin for LoadingPlugin {
             .with_collection::<GameAssets>()
             .continue_to_state(GameState::MainMenu)
             .build(app);
+
+        app.add_startup_system(hot_reload);
     }
 }
 
@@ -25,4 +27,8 @@ pub struct UIAssets {
 pub struct GameAssets {
     #[asset(path = "fortuna.ldtk")]
     pub map: Handle<LdtkAsset>,
+}
+
+fn hot_reload(_asset_server: Res<AssetServer>) {
+    // asset_server.watch_for_changes().unwrap();
 }
