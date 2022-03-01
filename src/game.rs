@@ -16,6 +16,7 @@ impl Plugin for GamePlugin {
             })
             .register_ldtk_int_cell::<WallBundle>(1)
             .register_ldtk_int_cell::<WallBundle>(2)
+            .register_ldtk_int_cell::<OneWayPlatformBundle>(4)
             .add_system_set(SystemSet::on_enter(GameState::Game).with_system(setup_game))
             .add_system_set(
                 SystemSet::on_update(GameState::Game)
@@ -108,6 +109,14 @@ pub struct WallBundle {
     wall: Wall,
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Default, Component)]
+pub struct OneWayPlatform;
+
+#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
+pub struct OneWayPlatformBundle {
+    one_way_platform: OneWayPlatform,
+}
+
 // SYSTEMS
 fn setup_game(mut commands: Commands, game_assets: Res<GameAssets>) {
     let camera = OrthographicCameraBundle::new_2d();
@@ -133,19 +142,30 @@ fn setup_game(mut commands: Commands, game_assets: Res<GameAssets>) {
 fn setup_obstacles(
     mut obstacles: ResMut<ObstaclesRes>,
     mut level_events: EventReader<LevelEvent>,
-    wall_query: Query<&GridCoords, With<Wall>>,
+    walls: Query<&GridCoords, With<Wall>>,
+    one_way_platforms: Query<&GridCoords, With<OneWayPlatform>>,
 ) {
     for event in level_events.iter() {
         match event {
             LevelEvent::Transformed(_) => {
                 obstacles.map.clear();
 
-                wall_query.for_each(|grid_coords| {
+                walls.for_each(|grid_coords| {
                     obstacles.map.insert(
                         Point(grid_coords.x, grid_coords.y),
                         Obstacle {
                             pos: Point(grid_coords.x, grid_coords.y),
                             is_one_way: false,
+                        },
+                    );
+                });
+
+                one_way_platforms.for_each(|grid_coords| {
+                    obstacles.map.insert(
+                        Point(grid_coords.x, grid_coords.y),
+                        Obstacle {
+                            pos: Point(grid_coords.x, grid_coords.y),
+                            is_one_way: true,
                         },
                     );
                 });
