@@ -216,30 +216,23 @@ fn handle_input(
     }
 
     let (mut acceleration, mut velocity) = query.single_mut();
+    let is_grounded = acceleration.y.abs() == 0.0 && velocity.y.abs() == 0.0;
 
     if keys.just_pressed(KeyCode::Space) {
-        let is_grounded = acceleration.y.abs() == 0.0 && velocity.y.abs() == 0.0;
-
         if is_grounded {
             acceleration.y = 0.0;
-            velocity.y = 15.0;
+            velocity.y = 10.0;
         }
     }
 
     if keys.just_pressed(KeyCode::R) {
         app_state.set(GameState::MainMenu).unwrap();
-        // transform.translation.x = 0.0;
-        // transform.translation.y = 0.0;
-        // velocity.x = 0.0;
-        // velocity.y = 0.0;
-        // acceleration.x = 0.0;
-        // acceleration.y = 0.0;
     }
 
     if keys.pressed(KeyCode::Left) {
-        velocity.x = -8.0;
+        velocity.x = if is_grounded { -6.0 } else { -4.0 };
     } else if keys.pressed(KeyCode::Right) {
-        velocity.x = 8.0;
+        velocity.x = if is_grounded { 6.0 } else { 4.0 };
     } else {
         velocity.x = 0.0;
     }
