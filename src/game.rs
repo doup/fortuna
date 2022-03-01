@@ -227,8 +227,8 @@ fn handle_input(
     let mut velocity = query.single_mut();
     let time_delta = time.delta_seconds();
     let jump_force = (-2.0 * GRAVITY * JUMP_HEIGHT_PX).sqrt();
-    let is_grounded = velocity.y.abs() == 0.0;
-    let is_coyote_time = false;
+    let is_grounded = velocity.y == 0.0;
+    let is_coyote_time = velocity.y < 0.0 && velocity.y > -150.0; // Naive implementation
 
     if keys.just_pressed(KeyCode::Space) {
         if is_grounded || is_coyote_time {
