@@ -30,6 +30,7 @@ impl Plugin for GamePlugin {
 }
 
 // RESOURCES
+const SKIN_WIDTH: f32 = 2.0;
 const TILE_SIZE: f32 = 16.0;
 const PLAYER_WIDTH: f32 = 16.0;
 const PLAYER_HEIGHT: f32 = 32.0;
@@ -245,21 +246,21 @@ fn player_movement(
 
     if velocity_x != 0.0 {
         let pos_x = transform.translation.x + velocity_x;
-        let bottom = transform.translation.y - PLAYER_HEIGHT_HALF;
-        let top = transform.translation.y + PLAYER_HEIGHT_HALF;
+        let bottom = transform.translation.y - PLAYER_HEIGHT_HALF + SKIN_WIDTH;
+        let top = transform.translation.y + PLAYER_HEIGHT_HALF - SKIN_WIDTH;
 
         let horizontal_bbox = if is_moving_right {
             let left = transform.translation.x + PLAYER_WIDTH_HALF;
-            let right = left + velocity_x;
+            let right = left + velocity_x.abs();
             BBox::new((left, bottom), (right, top))
         } else {
             let right = transform.translation.x - PLAYER_WIDTH_HALF;
-            let left = right + velocity_x;
+            let left = right - velocity_x.abs();
             BBox::new((left, bottom), (right, top))
         };
 
         let horizontal_obstacles = get_obstacle_list(
-            get_tile_list(get_tile_space_bbox(horizontal_bbox)),
+            get_tile_list(get_tile_space_bbox(&horizontal_bbox)),
             &obstacles.map,
             true,
         );
@@ -287,21 +288,21 @@ fn player_movement(
 
     if velocity_y != 0.0 {
         let pos_y = transform.translation.y + velocity_y;
-        let left = transform.translation.x - PLAYER_WIDTH_HALF;
-        let right = left + PLAYER_WIDTH;
+        let left = transform.translation.x - PLAYER_WIDTH_HALF + SKIN_WIDTH;
+        let right = transform.translation.x + PLAYER_WIDTH_HALF - SKIN_WIDTH;
 
         let vertical_bbox = if is_moving_up {
             let bottom = transform.translation.y + PLAYER_HEIGHT_HALF;
-            let top = bottom + velocity_y;
+            let top = bottom + velocity_y.abs();
             BBox::new((left, bottom), (right, top))
         } else {
             let top = transform.translation.y - PLAYER_HEIGHT_HALF;
-            let bottom = top + velocity_y;
+            let bottom = top - velocity_y.abs();
             BBox::new((left, bottom), (right, top))
         };
 
         let vertical_obstacles = get_obstacle_list(
-            get_tile_list(get_tile_space_bbox(vertical_bbox)),
+            get_tile_list(get_tile_space_bbox(&vertical_bbox)),
             &obstacles.map,
             is_moving_up,
         );
