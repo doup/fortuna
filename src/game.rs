@@ -352,7 +352,7 @@ fn clean_game(mut commands: Commands, entities: Query<Entity, With<GameStateEnti
 }
 
 /// Map screen-space bbox to tile-space bbox
-fn get_tile_space_bbox(bbox: BBox<f32>) -> BBox<i32> {
+fn get_tile_space_bbox(bbox: &BBox<f32>) -> BBox<i32> {
     BBox::new(
         (
             (bbox.min.0 / TILE_SIZE).floor() as i32,
@@ -404,22 +404,22 @@ mod test {
     #[test]
     fn test_get_tile_space_bbox() {
         assert_eq!(
-            get_tile_space_bbox(BBox::new((1.0, 1.0), (24.0, 38.0))),
+            get_tile_space_bbox(&BBox::new((1.0, 1.0), (24.0, 38.0))),
             BBox::new((0, 0), (1, 2))
         );
 
         assert_eq!(
-            get_tile_space_bbox(BBox::new((0.0, 0.0), (16.0, 16.0))),
+            get_tile_space_bbox(&BBox::new((0.0, 0.0), (16.0, 16.0))),
             BBox::new((0, 0), (1, 1))
         );
 
         assert_eq!(
-            get_tile_space_bbox(BBox::new((0.0, 0.0), (15.0, 15.0))),
+            get_tile_space_bbox(&BBox::new((0.0, 0.0), (15.0, 15.0))),
             BBox::new((0, 0), (0, 0))
         );
 
         assert_eq!(
-            get_tile_space_bbox(BBox::new((0.0, 0.0), (70.0, 8.0))),
+            get_tile_space_bbox(&BBox::new((0.0, 0.0), (70.0, 8.0))),
             BBox::new((0, 0), (4, 0))
         );
     }
