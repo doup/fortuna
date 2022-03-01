@@ -34,66 +34,105 @@ fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
         .spawn_bundle(UiCameraBundle::default())
         .insert(MainMenuStateEntity);
 
-    commands
-        .spawn_bundle(ButtonBundle {
-            style: Style {
-                size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                margin: Rect::all(Val::Auto),            // center button
-                justify_content: JustifyContent::Center, // horizontally center child text
-                align_items: AlignItems::Center,         // vertically center child text
-                ..Default::default()
-            },
-            color: NORMAL_BUTTON.into(),
-            ..Default::default()
-        })
-        .insert(PlayButton)
-        .insert(MainMenuStateEntity)
-        .with_children(|parent| {
-            parent
-                .spawn_bundle(TextBundle {
-                    text: Text::with_section(
-                        "Play",
-                        TextStyle {
-                            font: ui_assets.font.clone(),
-                            font_size: 40.0,
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                        },
-                        Default::default(),
-                    ),
-                    ..Default::default()
-                })
-                .insert(MainMenuStateEntity);
-        });
+    let button_margin = Rect {
+        top: Val::Px(15.0),
+        right: Val::Auto,
+        bottom: Val::Auto,
+        left: Val::Auto,
+    };
 
     commands
-        .spawn_bundle(ButtonBundle {
+        .spawn_bundle(NodeBundle {
             style: Style {
-                size: Size::new(Val::Px(150.0), Val::Px(65.0)),
-                margin: Rect::all(Val::Auto),            // center button
-                justify_content: JustifyContent::Center, // horizontally center child text
-                align_items: AlignItems::Center,         // vertically center child text
+                size: Size::new(Val::Percent(100.0), Val::Auto),
+                margin: Rect {
+                    top: Val::Auto,
+                    right: Val::Px(0.0),
+                    bottom: Val::Auto,
+                    left: Val::Px(0.0),
+                },
+                flex_direction: FlexDirection::ColumnReverse,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
                 ..Default::default()
             },
-            color: NORMAL_BUTTON.into(),
+            color: Color::NONE.into(),
             ..Default::default()
         })
-        .insert(ReBornButton)
         .insert(MainMenuStateEntity)
         .with_children(|parent| {
             parent
-                .spawn_bundle(TextBundle {
-                    text: Text::with_section(
-                        "Re-Born",
-                        TextStyle {
-                            font: ui_assets.font.clone(),
-                            font_size: 40.0,
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                        },
-                        Default::default(),
-                    ),
+                .spawn_bundle(ImageBundle {
+                    style: Style {
+                        size: Size::new(Val::Auto, Val::Px(100.0)),
+                        ..Default::default()
+                    },
+                    image: ui_assets.logo.clone().into(),
                     ..Default::default()
                 })
                 .insert(MainMenuStateEntity);
+
+            parent
+                .spawn_bundle(ButtonBundle {
+                    style: Style {
+                        size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                        margin: button_margin,
+                        justify_content: JustifyContent::Center, // horizontally center child text
+                        align_items: AlignItems::Center,         // vertically center child text
+                        ..Default::default()
+                    },
+                    color: NORMAL_BUTTON.into(),
+                    ..Default::default()
+                })
+                .insert(PlayButton)
+                .insert(MainMenuStateEntity)
+                .with_children(|parent| {
+                    parent
+                        .spawn_bundle(TextBundle {
+                            text: Text::with_section(
+                                "Play",
+                                TextStyle {
+                                    font: ui_assets.font.clone(),
+                                    font_size: 40.0,
+                                    color: Color::rgb(0.9, 0.9, 0.9),
+                                },
+                                Default::default(),
+                            ),
+                            ..Default::default()
+                        })
+                        .insert(MainMenuStateEntity);
+                });
+
+            parent
+                .spawn_bundle(ButtonBundle {
+                    style: Style {
+                        size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                        margin: button_margin,
+                        justify_content: JustifyContent::Center, // horizontally center child text
+                        align_items: AlignItems::Center,         // vertically center child text
+                        ..Default::default()
+                    },
+                    color: NORMAL_BUTTON.into(),
+                    ..Default::default()
+                })
+                .insert(ReBornButton)
+                .insert(MainMenuStateEntity)
+                .with_children(|parent| {
+                    parent
+                        .spawn_bundle(TextBundle {
+                            text: Text::with_section(
+                                "Re-Born",
+                                TextStyle {
+                                    font: ui_assets.font.clone(),
+                                    font_size: 40.0,
+                                    color: Color::rgb(0.9, 0.9, 0.9),
+                                },
+                                Default::default(),
+                            ),
+                            ..Default::default()
+                        })
+                        .insert(MainMenuStateEntity);
+                });
         });
 }
 

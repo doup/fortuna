@@ -21,6 +21,8 @@ impl Plugin for LoadingPlugin {
 pub struct UIAssets {
     #[asset(path = "goudy-bookletter-1911.otf")]
     pub font: Handle<Font>,
+    #[asset(path = "logo.png")]
+    pub logo: Handle<Image>,
 }
 
 #[derive(AssetCollection)]
