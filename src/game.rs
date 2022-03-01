@@ -30,14 +30,29 @@ impl Plugin for GamePlugin {
     }
 }
 
-// RESOURCES
-const SKIN_WIDTH: f32 = 2.0;
+// PLAYER CONSTANTS
 const TILE_SIZE: f32 = 16.0;
+const SKIN_SIZE: f32 = 2.0;
 const PLAYER_WIDTH: f32 = 16.0;
 const PLAYER_HEIGHT: f32 = 32.0;
 const PLAYER_WIDTH_HALF: f32 = PLAYER_WIDTH / 2.0;
 const PLAYER_HEIGHT_HALF: f32 = PLAYER_HEIGHT / 2.0;
 
+// RUN
+const RUN_TOP_SPEED: f32 = 200.0;
+const RUN_TOP_SPEED_TIME: f32 = 100.0; // Time in ms to get to top speed
+const RUN_STOP_TIME: f32 = 50.0; // Time in ms to stop
+const RUN_TOP_SPEED_RATE: f32 = RUN_TOP_SPEED / (RUN_TOP_SPEED_TIME / 1000.0);
+const RUN_STOP_RATE: f32 = RUN_TOP_SPEED / (RUN_STOP_TIME / 1000.0);
+
+// JUMP
+const GRAVITY: f32 = -1422.0;
+const JUMP_HEIGHT: f32 = 4.0; // Height in "Player Heights"
+const JUMP_HEIGHT_PX: f32 = (JUMP_HEIGHT - 1.0) * PLAYER_HEIGHT;
+const COYOTE_TIME: f32 = 80.0; // ms after falling a platform that still can jump
+const JUMP_BUFFER_TIME: f32 = 80.0; // ms before touching ground that can be jumped
+
+// RESOURCES
 struct ObstaclesRes {
     map: HashMap<Point<i32>, Obstacle>,
 }
@@ -91,12 +106,6 @@ struct Player;
 
 #[derive(Component)]
 struct Velocity {
-    x: f32,
-    y: f32,
-}
-
-#[derive(Component)]
-struct Acceleration {
     x: f32,
     y: f32,
 }
@@ -201,27 +210,29 @@ fn setup_entities(
             })
             .insert(Player)
             .insert(Velocity { x: 0.0, y: 0.0 })
-            .insert(Acceleration { x: 0.0, y: 0.0 })
             .insert(GameStateEntity);
     }
 }
 
 fn handle_input(
+    time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     mut app_state: ResMut<State<GameState>>,
-    mut query: Query<(&mut Acceleration, &mut Velocity), With<Player>>,
+    mut query: Query<&mut Velocity, With<Player>>,
 ) {
     if query.is_empty() {
         return;
     }
 
-    let (mut acceleration, mut velocity) = query.single_mut();
-    let is_grounded = acceleration.y.abs() == 0.0 && velocity.y.abs() == 0.0;
+    let mut velocity = query.single_mut();
+    let time_delta = time.delta_seconds();
+    let jump_force = (-2.0 * GRAVITY * JUMP_HEIGHT_PX).sqrt();
+    let is_grounded = velocity.y.abs() == 0.0;
+    let is_coyote_time = false;
 
     if keys.just_pressed(KeyCode::Space) {
-        if is_grounded {
-            acceleration.y = 0.0;
-            velocity.y = 10.0;
+        if is_grounded || is_coyote_time {
+            velocity.y = jump_force;
         }
     }
 
@@ -230,45 +241,45 @@ fn handle_input(
     }
 
     if keys.pressed(KeyCode::Left) {
-        velocity.x = if is_grounded { -6.0 } else { -4.0 };
+        velocity.x = (velocity.x - RUN_TOP_SPEED_RATE * time_delta).max(-RUN_TOP_SPEED);
     } else if keys.pressed(KeyCode::Right) {
-        velocity.x = if is_grounded { 6.0 } else { 4.0 };
-    } else {
-        velocity.x = 0.0;
+        velocity.x = (velocity.x + RUN_TOP_SPEED_RATE * time_delta).min(RUN_TOP_SPEED);
+    } else if velocity.x > 0.0 {
+        velocity.x = (velocity.x - RUN_STOP_RATE * time_delta).max(0.0);
+    } else if velocity.x < 0.0 {
+        velocity.x = (velocity.x + RUN_STOP_RATE * time_delta).min(0.0);
     }
 }
 
 fn player_movement(
     time: Res<Time>,
     obstacles: Res<ObstaclesRes>,
-    mut player_query: Query<(&mut Acceleration, &mut Velocity, &mut Transform), With<Player>>,
+    mut player_query: Query<(&mut Velocity, &mut Transform), With<Player>>,
 ) {
     if player_query.is_empty() {
         return;
     }
 
-    let (mut acceleration, mut velocity, mut transform) = player_query.single_mut();
+    let (mut velocity, mut transform) = player_query.single_mut();
+    let time_delta = time.delta_seconds();
 
-    let gravity = 20.0;
-    acceleration.y -= time.delta_seconds() * gravity;
+    velocity.y += GRAVITY * time_delta;
 
-    let velocity_x = velocity.x + acceleration.x;
-    let velocity_y = velocity.y + acceleration.y;
-    let is_moving_right = velocity_x > 0.0;
-    let is_moving_up = velocity_y > 0.0;
+    let is_moving_right = velocity.x > 0.0;
+    let is_moving_up = velocity.y > 0.0;
 
-    if velocity_x != 0.0 {
-        let pos_x = transform.translation.x + velocity_x;
-        let bottom = transform.translation.y - PLAYER_HEIGHT_HALF + SKIN_WIDTH;
-        let top = transform.translation.y + PLAYER_HEIGHT_HALF - SKIN_WIDTH;
+    if velocity.x != 0.0 {
+        let pos_x = transform.translation.x + velocity.x * time_delta;
+        let bottom = transform.translation.y - PLAYER_HEIGHT_HALF + SKIN_SIZE;
+        let top = transform.translation.y + PLAYER_HEIGHT_HALF - SKIN_SIZE;
 
         let horizontal_bbox = if is_moving_right {
             let left = transform.translation.x + PLAYER_WIDTH_HALF;
-            let right = left + velocity_x.abs();
+            let right = left + velocity.x.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         } else {
             let right = transform.translation.x - PLAYER_WIDTH_HALF;
-            let left = right - velocity_x.abs();
+            let left = right - velocity.x.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         };
 
@@ -299,18 +310,18 @@ fn player_movement(
         }
     }
 
-    if velocity_y != 0.0 {
-        let pos_y = transform.translation.y + velocity_y;
-        let left = transform.translation.x - PLAYER_WIDTH_HALF + SKIN_WIDTH;
-        let right = transform.translation.x + PLAYER_WIDTH_HALF - SKIN_WIDTH;
+    if velocity.y != 0.0 {
+        let pos_y = transform.translation.y + velocity.y * time_delta;
+        let left = transform.translation.x - PLAYER_WIDTH_HALF + SKIN_SIZE;
+        let right = transform.translation.x + PLAYER_WIDTH_HALF - SKIN_SIZE;
 
         let vertical_bbox = if is_moving_up {
             let bottom = transform.translation.y + PLAYER_HEIGHT_HALF;
-            let top = bottom + velocity_y.abs();
+            let top = bottom + velocity.y.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         } else {
             let top = transform.translation.y - PLAYER_HEIGHT_HALF;
-            let bottom = top - velocity_y.abs();
+            let bottom = top - velocity.y.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         };
 
@@ -335,7 +346,6 @@ fn player_movement(
                 || !is_moving_up && (nearest_obstacle_y > pos_y)
             {
                 transform.translation.y = nearest_obstacle_y;
-                acceleration.y = 0.0;
                 velocity.y = 0.0;
             } else {
                 transform.translation.y = pos_y;
