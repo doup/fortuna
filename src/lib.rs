@@ -1,7 +1,9 @@
+mod character_menu;
 mod game;
 mod loading;
 mod main_menu;
 mod score;
+mod stats;
 mod ui;
 
 use bevy::prelude::*;

@@ -23,6 +23,8 @@ pub struct UIAssets {
     pub font: Handle<Font>,
     #[asset(path = "logo.png")]
     pub logo: Handle<Image>,
+    #[asset(path = "character.png")]
+    pub character: Handle<Image>,
 }
 
 #[derive(AssetCollection)]

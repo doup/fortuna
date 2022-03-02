@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use crate::{loading::GameAssets, GameState};
+use crate::{
+    character_menu::CharacterMenuPlugin,
+    loading::GameAssets,
+    stats::{Stats, StatsRes},
+    GameState,
+};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 use rand::Rng;
@@ -9,7 +14,9 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(LdtkPlugin)
+        app.add_plugin(CharacterMenuPlugin)
+            .add_plugin(LdtkPlugin)
+            .insert_resource(StatsRes(Stats::new()))
             .insert_resource(LevelSelection::Index(0))
             .insert_resource(ObstaclesRes {
                 map: HashMap::new(),
@@ -126,6 +133,9 @@ pub struct OneWayPlatformBundle {
     one_way_platform: OneWayPlatform,
 }
 
+#[derive(Component)]
+struct GameCamera;
+
 // SYSTEMS
 fn setup_game(mut commands: Commands, game_assets: Res<GameAssets>) {
     let camera = OrthographicCameraBundle::new_2d();
@@ -138,6 +148,7 @@ fn setup_game(mut commands: Commands, game_assets: Res<GameAssets>) {
             },
             ..camera
         })
+        .insert(GameCamera)
         .insert(GameStateEntity);
 
     commands
@@ -357,8 +368,8 @@ fn player_movement(
 }
 
 fn camera_movement(
-    players: Query<&Transform, (With<Player>, Without<Camera>)>,
-    mut cameras: Query<&mut Transform, With<Camera>>,
+    players: Query<&Transform, (With<Player>, Without<GameCamera>)>,
+    mut cameras: Query<&mut Transform, With<GameCamera>>,
 ) {
     if !players.is_empty() {
         let player_transform = players.single();
