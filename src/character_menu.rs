@@ -97,7 +97,7 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                                     vertical: VerticalAlign::Center,
                                 },
                                 sections: vec![TextSection {
-                                    value: String::from("short example"), //stats.0.get_description(),
+                                    value: stats.0.get_description(),
                                     style: TextStyle {
                                         font: ui_assets.font.clone(),
                                         font_size: 40.0,
