@@ -25,6 +25,23 @@ pub struct UIAssets {
     pub logo: Handle<Image>,
     #[asset(path = "character.png")]
     pub character: Handle<Image>,
+    // Badges
+    #[asset(path = "badge-skin-light.png")]
+    pub badge_skin_light: Handle<Image>,
+    #[asset(path = "badge-skin-medium.png")]
+    pub badge_skin_medium: Handle<Image>,
+    #[asset(path = "badge-skin-dark.png")]
+    pub badge_skin_dark: Handle<Image>,
+    #[asset(path = "badge-male.png")]
+    pub badge_male: Handle<Image>,
+    #[asset(path = "badge-female.png")]
+    pub badge_female: Handle<Image>,
+    #[asset(path = "badge-rich.png")]
+    pub badge_rich: Handle<Image>,
+    #[asset(path = "badge-smart.png")]
+    pub badge_smart: Handle<Image>,
+    #[asset(path = "badge-strong.png")]
+    pub badge_strong: Handle<Image>,
 }
 
 #[derive(AssetCollection)]

@@ -3,7 +3,38 @@ use rand::{
     Rng,
 };
 
-#[derive(Debug)]
+use crate::game::PLAYER_HEIGHT;
+
+// RUN
+const RUN_TOP_SPEED_STRONG: f32 = 200.0;
+const RUN_TOP_SPEED_WEAK: f32 = 130.0;
+pub const RUN_TOP_SPEED_DEPRESSED: f32 = 40.0;
+const RUN_TOP_SPEED_TIME: f32 = 100.0; // Time in ms to get to top speed
+const RUN_STOP_TIME: f32 = 50.0; // Time in ms to stop
+const RUN_TOP_SPEED_RATE_STRONG: f32 = RUN_TOP_SPEED_STRONG / (RUN_TOP_SPEED_TIME / 1000.0);
+const RUN_STOP_RATE_STRONG: f32 = RUN_TOP_SPEED_STRONG / (RUN_STOP_TIME / 1000.0);
+const RUN_TOP_SPEED_RATE_WEAK: f32 = RUN_TOP_SPEED_WEAK / (RUN_TOP_SPEED_TIME / 1000.0);
+const RUN_STOP_RATE_WEAK: f32 = RUN_TOP_SPEED_WEAK / (RUN_STOP_TIME / 1000.0);
+pub const RUN_TOP_SPEED_RATE_DEPRESSED: f32 =
+    RUN_TOP_SPEED_DEPRESSED / (RUN_TOP_SPEED_TIME / 1000.0);
+pub const RUN_STOP_RATE_DEPRESSED: f32 = RUN_TOP_SPEED_DEPRESSED / (RUN_STOP_TIME / 1000.0);
+
+// JUMP
+const JUMP_HEIGHT_STRONG: f32 = 4.0; // Height in "Player Heights"
+const JUMP_HEIGHT_STRONG_PX: f32 = (JUMP_HEIGHT_STRONG - 1.0) * PLAYER_HEIGHT;
+const JUMP_HEIGHT_WEAK: f32 = 3.0; // Height in "Player Heights"
+const JUMP_HEIGHT_WEAK_PX: f32 = (JUMP_HEIGHT_WEAK - 1.0) * PLAYER_HEIGHT;
+const JUMP_HEIGHT_DEPRESSED: f32 = 2.0; // Height in "Player Heights"
+pub const JUMP_HEIGHT_DEPRESSED_PX: f32 = (JUMP_HEIGHT_DEPRESSED - 1.0) * PLAYER_HEIGHT;
+
+// DEPRESSIVE STATE
+pub const MIN_DEPRE_DURATION: f64 = 2.0;
+pub const MAX_DEPRE_DURATION: f64 = 6.0;
+pub const MIN_TIME_BETWEEN_DEPRE: f64 = 10.0;
+const MIN_DEPRE_CHANCE: f64 = 0.15;
+const MAX_DEPRE_CHANCE: f64 = 0.60;
+
+#[derive(Debug, PartialEq)]
 pub enum Wealth {
     Poor,
     MiddleClass,
@@ -16,6 +47,23 @@ impl Distribution<Wealth> for Standard {
             0 => Wealth::Poor,
             1 => Wealth::MiddleClass,
             _ => Wealth::Rich,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum MentalHealth {
+    Healthy,
+    Depressive,
+    Psychotic,
+}
+
+impl Distribution<MentalHealth> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MentalHealth {
+        match rng.gen_range(0..=2) {
+            0 => MentalHealth::Healthy,
+            1 => MentalHealth::Depressive,
+            _ => MentalHealth::Psychotic,
         }
     }
 }
@@ -35,7 +83,7 @@ impl Distribution<Strength> for Standard {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SkinColor {
     Light,
     Medium,
@@ -72,24 +120,93 @@ pub struct StatsRes(pub Stats);
 #[derive(Debug)]
 pub struct Stats {
     pub color: SkinColor,
-    pub has_mental_illness: bool,
+    pub mental_health: MentalHealth,
     pub has_supportive_family: bool,
     pub intelligence: Intelligence,
     pub is_male: bool,
     pub strength: Strength,
     pub wealth: Wealth,
+    // Computed
+    pub is_depressive: bool,
+    pub depre_chance: f64,
+    pub can_skip_one_way_platforms: bool,
+    pub top_speed: f32,
+    pub top_speed_rate: f32,
+    pub stop_rate: f32,
+    pub jump_height_px: f32,
+    pub lifes: i32,
 }
 
 impl Stats {
     pub fn new() -> Stats {
+        Stats::from_config(
+            rand::random(),
+            rand::random(),
+            rand::random(),
+            rand::random(),
+            rand::random(),
+            rand::random(),
+            rand::random(),
+        )
+    }
+
+    pub fn from_config(
+        color: SkinColor,
+        mental_health: MentalHealth,
+        has_supportive_family: bool,
+        intelligence: Intelligence,
+        is_male: bool,
+        strength: Strength,
+        wealth: Wealth,
+    ) -> Stats {
+        let is_depressive = mental_health == MentalHealth::Depressive;
+        let depre_chance = rand::thread_rng().gen_range(MIN_DEPRE_CHANCE..MAX_DEPRE_CHANCE);
+        let can_skip_one_way_platforms = is_male;
+        let top_speed;
+        let top_speed_rate;
+        let stop_rate;
+        let jump_height_px;
+
+        if strength == Strength::Strong {
+            top_speed = RUN_TOP_SPEED_STRONG;
+            top_speed_rate = RUN_TOP_SPEED_RATE_STRONG;
+            stop_rate = RUN_STOP_RATE_STRONG;
+            jump_height_px = JUMP_HEIGHT_STRONG_PX;
+        } else {
+            top_speed = RUN_TOP_SPEED_WEAK;
+            top_speed_rate = RUN_TOP_SPEED_RATE_WEAK;
+            stop_rate = RUN_STOP_RATE_WEAK;
+            jump_height_px = JUMP_HEIGHT_WEAK_PX;
+        }
+
+        // Lifes
+        let mut lifes = match wealth {
+            Wealth::Rich => 3,
+            Wealth::MiddleClass => 2,
+            Wealth::Poor => 1,
+        };
+
+        if has_supportive_family && lifes < 3 {
+            lifes += 1;
+        }
+
         Stats {
-            color: rand::random(),
-            has_mental_illness: rand::random(),
-            has_supportive_family: rand::random(),
-            intelligence: rand::random(),
-            is_male: rand::random(),
-            strength: rand::random(),
-            wealth: rand::random(),
+            color,
+            mental_health,
+            has_supportive_family,
+            intelligence,
+            is_male,
+            strength,
+            wealth,
+            // Computed
+            is_depressive,
+            depre_chance,
+            can_skip_one_way_platforms,
+            top_speed,
+            top_speed_rate,
+            stop_rate,
+            jump_height_px,
+            lifes,
         }
     }
 
@@ -104,9 +221,9 @@ impl Stats {
             false => String::from("woman"),
         };
 
-        let mental_health = match self.has_mental_illness {
-            true => String::from(""),
-            false => String::from("mentally healthy, "),
+        let mental_health = match self.mental_health {
+            MentalHealth::Healthy => String::from("mentally healthy, "),
+            _ => String::from(""),
         };
 
         let wealth = match self.wealth {
@@ -144,39 +261,39 @@ mod test {
 
     #[test]
     fn test_get_description() {
-        let stats = Stats {
-            color: SkinColor::Light,
-            has_mental_illness: false,
-            has_supportive_family: true,
-            intelligence: Intelligence::Smart,
-            is_male: true,
-            strength: Strength::Strong,
-            wealth: Wealth::Rich,
-        };
+        let stats = Stats::from_config(
+            SkinColor::Light,
+            MentalHealth::Healthy,
+            true,
+            Intelligence::Smart,
+            true,
+            Strength::Strong,
+            Wealth::Rich,
+        );
 
         assert_eq!("You're a man born to a rich supportive family. You're mentally healthy, physically strong and fairly smart.", stats.get_description());
 
-        let stats = Stats {
-            color: SkinColor::Light,
-            has_mental_illness: true,
-            has_supportive_family: false,
-            intelligence: Intelligence::Dumb,
-            is_male: false,
-            strength: Strength::Weak,
-            wealth: Wealth::Poor,
-        };
+        let stats = Stats::from_config(
+            SkinColor::Light,
+            MentalHealth::Depressive,
+            false,
+            Intelligence::Dumb,
+            false,
+            Strength::Weak,
+            Wealth::Poor,
+        );
 
         assert_eq!("You're a woman born to a poor unstructured family. You're not very strong and not very smart.", stats.get_description());
 
-        let stats = Stats {
-            color: SkinColor::Light,
-            has_mental_illness: false,
-            has_supportive_family: true,
-            intelligence: Intelligence::Smart,
-            is_male: false,
-            strength: Strength::Weak,
-            wealth: Wealth::MiddleClass,
-        };
+        let stats = Stats::from_config(
+            SkinColor::Light,
+            MentalHealth::Healthy,
+            true,
+            Intelligence::Smart,
+            false,
+            Strength::Weak,
+            Wealth::MiddleClass,
+        );
 
         assert_eq!("You're a woman born to a middle-class supportive family. You're mentally healthy, not very strong but you're fairly smart.", stats.get_description());
     }

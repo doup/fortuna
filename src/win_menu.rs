@@ -3,43 +3,38 @@ use crate::ui::{handle_ui_buttons, NORMAL_BUTTON};
 use crate::GameState;
 use bevy::prelude::*;
 
-pub struct MainMenuPlugin;
+pub struct WinPlugin;
 
-impl Plugin for MainMenuPlugin {
+impl Plugin for WinPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_main_menu))
+        app.add_system_set(SystemSet::on_enter(GameState::WinMenu).with_system(setup_win))
             .add_system_set(
-                SystemSet::on_update(GameState::MainMenu)
+                SystemSet::on_update(GameState::WinMenu)
                     .with_system(handle_ui_buttons)
-                    .with_system(handle_play_button),
+                    .with_system(handle_play_again_button),
             )
-            .add_system_set(SystemSet::on_exit(GameState::MainMenu).with_system(clean_main_menu));
+            .add_system_set(SystemSet::on_exit(GameState::WinMenu).with_system(clean_win));
     }
 }
 
 // COMPONENTS
 #[derive(Component)]
-struct MainMenuStateEntity;
+struct WinMenuStateEntity;
 
 #[derive(Component)]
-struct PlayButton;
+struct PlayAgainButton;
 
 // SYSTEMS
-fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
+fn setup_win(mut commands: Commands, ui_assets: Res<UIAssets>) {
     commands
         .spawn_bundle(UiCameraBundle::default())
-        .insert(MainMenuStateEntity);
+        .insert(WinMenuStateEntity);
 
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                margin: Rect {
-                    top: Val::Auto,
-                    right: Val::Px(0.0),
-                    bottom: Val::Auto,
-                    left: Val::Px(0.0),
-                },
+                margin: Rect::all(Val::Px(0.0)),
                 flex_direction: FlexDirection::ColumnReverse,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
@@ -48,28 +43,42 @@ fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
             color: Color::WHITE.into(),
             ..Default::default()
         })
-        .insert(MainMenuStateEntity)
+        .insert(WinMenuStateEntity)
         .with_children(|parent| {
             parent
-                .spawn_bundle(ImageBundle {
+                .spawn_bundle(TextBundle {
                     style: Style {
-                        size: Size::new(Val::Auto, Val::Px(120.0)),
+                        max_size: Size::new(Val::Px(600.0), Val::Auto),
                         ..Default::default()
                     },
-                    image: ui_assets.logo.clone().into(),
+                    // Use `Text` directly
+                    text: Text {
+                        alignment: TextAlignment {
+                            horizontal: HorizontalAlign::Center,
+                            vertical: VerticalAlign::Center,
+                        },
+                        sections: vec![TextSection {
+                            value: String::from("You've reached the top!"),
+                            style: TextStyle {
+                                font: ui_assets.font.clone(),
+                                font_size: 40.0,
+                                color: Color::BLACK,
+                            },
+                        }],
+                    },
                     ..Default::default()
                 })
-                .insert(MainMenuStateEntity);
+                .insert(WinMenuStateEntity);
 
             parent
                 .spawn_bundle(ButtonBundle {
                     style: Style {
-                        size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                        size: Size::new(Val::Px(170.0), Val::Px(65.0)),
                         margin: Rect {
                             top: Val::Px(15.0),
-                            right: Val::Undefined,
-                            bottom: Val::Undefined,
-                            left: Val::Undefined,
+                            right: Val::Auto,
+                            bottom: Val::Px(15.0),
+                            left: Val::Auto,
                         },
                         justify_content: JustifyContent::Center, // horizontally center child text
                         align_items: AlignItems::Center,         // vertically center child text
@@ -78,13 +87,13 @@ fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
                     color: NORMAL_BUTTON.into(),
                     ..Default::default()
                 })
-                .insert(PlayButton)
-                .insert(MainMenuStateEntity)
+                .insert(PlayAgainButton)
+                .insert(WinMenuStateEntity)
                 .with_children(|parent| {
                     parent
                         .spawn_bundle(TextBundle {
                             text: Text::with_section(
-                                "Play",
+                                "Play Again",
                                 TextStyle {
                                     font: ui_assets.font.clone(),
                                     font_size: 40.0,
@@ -94,20 +103,20 @@ fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
                             ),
                             ..Default::default()
                         })
-                        .insert(MainMenuStateEntity);
+                        .insert(WinMenuStateEntity);
                 });
         });
 }
 
-fn clean_main_menu(mut commands: Commands, entities: Query<Entity, With<MainMenuStateEntity>>) {
+fn clean_win(mut commands: Commands, entities: Query<Entity, With<WinMenuStateEntity>>) {
     for entity in entities.iter() {
         commands.entity(entity).despawn();
     }
 }
 
-fn handle_play_button(
+fn handle_play_again_button(
     mut app_state: ResMut<State<GameState>>,
-    interaction_query: Query<&Interaction, (Changed<Interaction>, With<PlayButton>)>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<PlayAgainButton>)>,
 ) {
     for interaction in interaction_query.iter() {
         if *interaction == Interaction::Clicked {
