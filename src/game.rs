@@ -745,6 +745,7 @@ fn goo_movement(
 
 fn goo_collision(
     time: Res<Time>,
+    obstacles: Res<ObstaclesRes>,
     mut player_query: Query<(&Transform, &mut Player), (With<Player>, Without<Goo>)>,
     mut app_state: ResMut<State<GameState>>,
     mut goo_query: Query<&mut Goo>,
@@ -758,8 +759,20 @@ fn goo_collision(
         if player.lifes == 0 {
             app_state.set(GameState::LoseMenu).unwrap();
         } else {
+            let first_down_obstacle_tile_pos = get_first_obstacle_pos_downward(
+                &obstacles.map,
+                to_tile_space(Point(
+                    player_transform.translation.x,
+                    player_transform.translation.y,
+                )),
+            )
+            .unwrap();
+
+            let floor_y = first_down_obstacle_tile_pos.1 as f32 * TILE_SIZE + TILE_SIZE;
+            let distance_to_floor = goo.y - floor_y;
+
             player.blink_until = time.seconds_since_startup() + PLAYER_BLINK_DURATION;
-            goo.regress += GOO_HIT_REGRESS;
+            goo.regress += distance_to_floor + GOO_HIT_REGRESS;
         }
     }
 }
@@ -885,6 +898,29 @@ fn get_tile_list(bbox: BBox<i32>) -> Vec<Point<i32>> {
     }
 
     tiles
+}
+
+/// Convert screen-space Point to tile-space
+fn to_tile_space(pos: Point<f32>) -> Point<i32> {
+    Point(
+        (pos.0 / TILE_SIZE).floor() as i32,
+        (pos.1 / TILE_SIZE).floor() as i32,
+    )
+}
+
+fn get_first_obstacle_pos_downward(
+    obstacles: &HashMap<Point<i32>, Obstacle>,
+    pos: Point<i32>,
+) -> Option<Point<i32>> {
+    for y in (0..pos.1).rev() {
+        let obs = obstacles.get(&Point(pos.0, y));
+
+        if obs.is_some() {
+            return Some(obs.unwrap().pos.clone());
+        }
+    }
+
+    None
 }
 
 /// Given a tile list, get the ones with obstacles
