@@ -1,3 +1,9 @@
+mod camera;
+mod goo;
+
+use bevy::{prelude::*, sprite::collide_aabb::collide};
+use bevy_ecs_ldtk::prelude::*;
+use rand::Rng;
 use std::collections::HashMap;
 
 use crate::{
@@ -9,9 +15,6 @@ use crate::{
     },
     GameState,
 };
-use bevy::{prelude::*, sprite::collide_aabb::collide};
-use bevy_ecs_ldtk::prelude::*;
-use rand::Rng;
 
 pub struct GamePlugin;
 
@@ -45,9 +48,9 @@ impl Plugin for GamePlugin {
                     .with_system(show_depressed_text.after("player_color"))
                     .with_system(handle_input.label("input").after("player_color"))
                     .with_system(player_movement.label("movement").after("input"))
-                    .with_system(camera_movement.after("movement"))
-                    .with_system(goo_movement.label("goo_movement"))
-                    .with_system(goo_collision.after("goo_movement").after("movement"))
+                    .with_system(camera::camera_movement.after("movement"))
+                    .with_system(goo::goo_movement.label("goo_movement"))
+                    .with_system(goo::goo_collision.after("goo_movement").after("movement"))
                     .with_system(goal_collision.after("movement"))
                     .with_system(trigger_depression)
                     .with_system(blink_player)
@@ -71,18 +74,12 @@ const GRAVITY: f32 = -1422.0;
 // const COYOTE_TIME: f32 = 80.0; // ms after falling a platform that still can jump
 // const JUMP_BUFFER_TIME: f32 = 80.0; // ms before touching ground that can be jumped
 
-// GOO
-const GOO_INITIAL_POS: f32 = -30.0;
-const GOO_SPEED: f32 = 40.0;
-const GOO_SIN_AMPLITUDE: f32 = 6.0;
-const GOO_HIT_REGRESS: f32 = 50.0;
-
 // BOUNCER
 const BOUNCER_FORCE: f32 = 2500.0;
 const BOUNCER_DURATION: f32 = 0.5;
 
 // RESOURCES
-struct ObstaclesRes {
+pub struct ObstaclesRes {
     map: HashMap<Point<i32>, Obstacle>,
 }
 
@@ -142,13 +139,6 @@ pub struct Player {
 }
 
 #[derive(Component)]
-struct Goo {
-    y: f32,
-    start_time: f32,
-    regress: f32,
-}
-
-#[derive(Component)]
 struct Velocity {
     x: f32,
     y: f32,
@@ -186,9 +176,6 @@ struct Bouncer {
 struct Goal;
 
 #[derive(Component)]
-struct GameCamera;
-
-#[derive(Component)]
 pub struct LifesText;
 
 #[derive(Component)]
@@ -215,7 +202,7 @@ fn setup_game(
             },
             ..camera
         })
-        .insert(GameCamera)
+        .insert(camera::GameCamera)
         .insert(GameStateEntity);
 
     commands
@@ -307,11 +294,7 @@ fn setup_goo(mut commands: Commands, time: Res<Time>) {
             },
             ..Default::default()
         })
-        .insert(Goo {
-            y: GOO_INITIAL_POS,
-            start_time: time.seconds_since_startup() as f32,
-            regress: 0.0,
-        })
+        .insert(goo::Goo::new(time.seconds_since_startup()))
         .insert(GameStateEntity);
 }
 
@@ -724,57 +707,6 @@ fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Query<
     }
 }
 
-fn goo_movement(
-    time: Res<Time>,
-    players: Query<&Transform, (With<Player>, Without<Goo>)>,
-    mut goo_query: Query<(&mut Goo, &mut Transform, &Sprite)>,
-) {
-    let player_transform = players.single();
-    let (mut goo, mut transform, sprite) = goo_query.single_mut();
-
-    goo.y = GOO_INITIAL_POS - goo.regress
-        + (time.seconds_since_startup() as f32 - goo.start_time) * GOO_SPEED
-        + ((time.seconds_since_startup() * 2.0).sin() as f32) * GOO_SIN_AMPLITUDE;
-
-    transform.translation.x = player_transform.translation.x;
-    transform.translation.y = goo.y - sprite.custom_size.unwrap().y / 2.0;
-    transform.translation.z = 500.0;
-}
-
-fn goo_collision(
-    time: Res<Time>,
-    obstacles: Res<ObstaclesRes>,
-    mut player_query: Query<(&Transform, &mut Player), (With<Player>, Without<Goo>)>,
-    mut app_state: ResMut<State<GameState>>,
-    mut goo_query: Query<&mut Goo>,
-) {
-    let mut goo = goo_query.single_mut();
-    let (player_transform, mut player) = player_query.single_mut();
-
-    if player_transform.translation.y < goo.y {
-        player.lifes -= 1;
-
-        if player.lifes == 0 {
-            app_state.set(GameState::LoseMenu).unwrap();
-        } else {
-            let first_down_obstacle_tile_pos = get_first_obstacle_pos_downward(
-                &obstacles.map,
-                to_tile_space(Point(
-                    player_transform.translation.x,
-                    player_transform.translation.y,
-                )),
-            )
-            .unwrap();
-
-            let floor_y = first_down_obstacle_tile_pos.1 as f32 * TILE_SIZE + TILE_SIZE;
-            let distance_to_floor = goo.y - floor_y;
-
-            player.blink_until = time.seconds_since_startup() + PLAYER_BLINK_DURATION;
-            goo.regress += distance_to_floor + GOO_HIT_REGRESS;
-        }
-    }
-}
-
 fn goal_collision(
     mut app_state: ResMut<State<GameState>>,
     mut player_query: Query<(&Transform, &Sprite), (With<Player>, Without<Goal>)>,
@@ -846,20 +778,6 @@ fn bounce_player(
             }
         }
     }
-}
-
-fn camera_movement(
-    players: Query<&Transform, (With<Player>, Without<GameCamera>)>,
-    mut cameras: Query<&mut Transform, With<GameCamera>>,
-) {
-    let player_transform = players.single();
-    let mut camera_transform = cameras.single_mut();
-
-    camera_transform.translation.x = player_transform.translation.x;
-    camera_transform.translation.y = player_transform.translation.y;
-    // camera_transform.translation.x = 208.0;
-    // camera_transform.translation.y = 192.0;
-    // println!("{:?}", camera_transform.translation);
 }
 
 fn clean_game(mut commands: Commands, entities: Query<Entity, With<GameStateEntity>>) {
