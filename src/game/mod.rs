@@ -1,3 +1,4 @@
+mod bouncer;
 mod camera;
 mod goo;
 
@@ -54,7 +55,7 @@ impl Plugin for GamePlugin {
                     .with_system(goal_collision.after("movement"))
                     .with_system(trigger_depression)
                     .with_system(blink_player)
-                    .with_system(bounce_player),
+                    .with_system(bouncer::bounce_player),
             )
             .add_system_set(SystemSet::on_exit(GameState::Game).with_system(clean_game));
     }
@@ -73,10 +74,6 @@ const PLAYER_BLINK_DURATION: f64 = 1.5;
 const GRAVITY: f32 = -1422.0;
 // const COYOTE_TIME: f32 = 80.0; // ms after falling a platform that still can jump
 // const JUMP_BUFFER_TIME: f32 = 80.0; // ms before touching ground that can be jumped
-
-// BOUNCER
-const BOUNCER_FORCE: f32 = 2500.0;
-const BOUNCER_DURATION: f32 = 0.5;
 
 // RESOURCES
 pub struct ObstaclesRes {
@@ -158,18 +155,6 @@ pub struct OneWayPlatform;
 #[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
 pub struct OneWayPlatformBundle {
     one_way_platform: OneWayPlatform,
-}
-
-#[derive(Debug)]
-enum BouncerType {
-    WealthRich,
-    SkinColorLight,
-}
-
-#[derive(Debug, Component)]
-struct Bouncer {
-    allow: BouncerType,
-    direction: f32,
 }
 
 #[derive(Component)]
@@ -448,49 +433,9 @@ fn setup_entities(
                 },
                 ..Default::default()
             })
-            .insert(get_bouncer_from_entity_instance(&bouncer_entity))
+            .insert(bouncer::get_bouncer_from_entity_instance(&bouncer_entity))
             .insert(GameStateEntity);
     }
-}
-
-fn get_bouncer_from_entity_instance(entity: &EntityInstance) -> Bouncer {
-    let bouncer_type_cfg = entity
-        .field_instances
-        .iter()
-        .filter(|field| field.identifier == "type")
-        .collect::<Vec<_>>();
-
-    let push_left_cfg = entity
-        .field_instances
-        .iter()
-        .filter(|field| field.identifier == "push_left")
-        .collect::<Vec<_>>();
-
-    let allow = if let FieldValue::String(bouncer_type_option) = bouncer_type_cfg[0].value.clone() {
-        if let Some(bouncer_type) = bouncer_type_option {
-            match bouncer_type.as_str() {
-                "rich" => BouncerType::WealthRich,
-                "skin_light" => BouncerType::SkinColorLight,
-                _ => BouncerType::WealthRich,
-            }
-        } else {
-            BouncerType::WealthRich
-        }
-    } else {
-        BouncerType::WealthRich
-    };
-
-    let direction: f32 = if let FieldValue::Bool(push_left) = push_left_cfg[0].value {
-        if push_left {
-            -1.0
-        } else {
-            1.0
-        }
-    } else {
-        -1.0
-    };
-
-    Bouncer { allow, direction }
 }
 
 fn player_color(stats: Res<StatsRes>, mut player_query: Query<&mut Sprite, With<Player>>) {
@@ -573,9 +518,11 @@ fn handle_input(
         velocity.x += bounce_force * time_delta;
 
         bounce_force = if bounce_force > 0.0 {
-            (bounce_force - (BOUNCER_FORCE / BOUNCER_DURATION) * time_delta).max(0.0)
+            (bounce_force - (bouncer::BOUNCER_FORCE / bouncer::BOUNCER_DURATION) * time_delta)
+                .max(0.0)
         } else if bounce_force < 0.0 {
-            (bounce_force + (BOUNCER_FORCE / BOUNCER_DURATION) * time_delta).min(0.0)
+            (bounce_force + (bouncer::BOUNCER_FORCE / bouncer::BOUNCER_DURATION) * time_delta)
+                .min(0.0)
         } else {
             0.0
         };
@@ -735,48 +682,6 @@ fn blink_player(time: Res<Time>, mut player_query: Query<(&Player, &mut Visibili
         visibility.is_visible = (time_seconds * 10.0) as i32 % 2 == 0;
     } else {
         visibility.is_visible = true;
-    }
-}
-
-fn bounce_player(
-    stats: Res<StatsRes>,
-    time: Res<Time>,
-    mut player_query: Query<
-        (&mut Transform, &mut Player, &Sprite, &Velocity),
-        (With<Player>, Without<Bouncer>),
-    >,
-    bouncer_query: Query<(&Transform, &Sprite, &Bouncer), (With<Bouncer>, Without<Player>)>,
-) {
-    let (mut player_transform, mut player, player_sprite, player_velocity) =
-        player_query.single_mut();
-
-    for (bouncer_transform, bouncer_sprite, bouncer) in bouncer_query.iter() {
-        let collision = collide(
-            player_transform.translation,
-            player_sprite.custom_size.unwrap(),
-            bouncer_transform.translation,
-            bouncer_sprite.custom_size.unwrap(),
-        );
-
-        let allow = match bouncer.allow {
-            BouncerType::SkinColorLight => stats.0.color == SkinColor::Light,
-            BouncerType::WealthRich => stats.0.wealth == Wealth::Rich,
-        };
-
-        if !allow && collision.is_some() {
-            if bouncer.direction == 1.0 {
-                player_transform.translation.x += 2.0 * PLAYER_WIDTH;
-            } else {
-                player_transform.translation.x -= 2.0 * PLAYER_WIDTH;
-            }
-
-            if let None = player.bounce_force {
-                println!("You're not allowed here: {:?}", bouncer);
-
-                player.bounce_force = Some(BOUNCER_FORCE * bouncer.direction);
-                player.blink_until = time.seconds_since_startup() + BOUNCER_DURATION as f64;
-            }
-        }
     }
 }
 
