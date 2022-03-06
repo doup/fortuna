@@ -539,9 +539,9 @@ fn player_movement(
     stats: Res<StatsRes>,
     time: Res<Time>,
     obstacles: Res<ObstaclesRes>,
-    mut player_query: Query<(&mut Velocity, &mut Transform, &Player), With<Player>>,
+    mut player_query: Query<(&mut Velocity, &mut Transform), With<Player>>,
 ) {
-    let (mut velocity, mut transform, player) = player_query.single_mut();
+    let (mut velocity, mut transform) = player_query.single_mut();
     let time_delta = time.delta_seconds();
 
     velocity.y += GRAVITY * time_delta;
