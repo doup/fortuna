@@ -16,7 +16,7 @@ use main_menu::MainMenuPlugin;
 use win_menu::WinPlugin;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-enum GameState {
+pub enum GameState {
     CharacterMenu,
     Game,
     Loading,
