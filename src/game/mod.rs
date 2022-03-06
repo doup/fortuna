@@ -95,7 +95,7 @@ struct Obstacle {
     is_one_way: bool,
 }
 
-#[derive(Debug, PartialEq, Hash, Eq)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
 struct Point<T: Copy>(T, T);
 
 #[derive(Debug, PartialEq)]
@@ -447,8 +447,6 @@ fn setup_entities(
 
     for bouncer_entity in bouncer_entities {
         let (bouncer_transform, bouncer_entity) = bouncer_entity;
-
-        // println!("{}", bouncer_entity);
 
         commands
             .spawn_bundle(SpriteBundle {
@@ -832,9 +830,6 @@ fn bounce_player(
             BouncerType::SkinColorLight => stats.0.color == SkinColor::Light,
             BouncerType::WealthRich => stats.0.wealth == Wealth::Rich,
         };
-
-        println!("{:?}", stats.0);
-        println!("{:?}", bouncer);
 
         if !allow && collision.is_some() {
             if bouncer.direction == 1.0 {
