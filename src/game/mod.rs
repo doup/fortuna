@@ -1,8 +1,9 @@
 mod bouncer;
 mod camera;
+mod goal;
 mod goo;
 
-use bevy::{prelude::*, sprite::collide_aabb::collide};
+use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 use rand::Rng;
 use std::collections::HashMap;
@@ -52,7 +53,7 @@ impl Plugin for GamePlugin {
                     .with_system(camera::camera_movement.after("movement"))
                     .with_system(goo::goo_movement.label("goo_movement"))
                     .with_system(goo::goo_collision.after("goo_movement").after("movement"))
-                    .with_system(goal_collision.after("movement"))
+                    .with_system(goal::goal_collision.after("movement"))
                     .with_system(trigger_depression)
                     .with_system(blink_player)
                     .with_system(bouncer::bounce_player),
@@ -156,9 +157,6 @@ pub struct OneWayPlatform;
 pub struct OneWayPlatformBundle {
     one_way_platform: OneWayPlatform,
 }
-
-#[derive(Component)]
-struct Goal;
 
 #[derive(Component)]
 pub struct LifesText;
@@ -404,7 +402,7 @@ fn setup_entities(
                 },
                 ..Default::default()
             })
-            .insert(Goal)
+            .insert(goal::Goal)
             .insert(GameStateEntity);
     }
 
@@ -651,26 +649,6 @@ fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Query<
             println!("Depressed… :-(");
             // Add message
         }
-    }
-}
-
-fn goal_collision(
-    mut app_state: ResMut<State<GameState>>,
-    mut player_query: Query<(&Transform, &Sprite), (With<Player>, Without<Goal>)>,
-    goal_query: Query<(&Transform, &Sprite), (With<Goal>, Without<Player>)>,
-) {
-    let (player_transform, player_sprite) = player_query.single_mut();
-    let (goal_transform, goal_sprite) = goal_query.single();
-
-    if collide(
-        player_transform.translation,
-        player_sprite.custom_size.unwrap(),
-        goal_transform.translation,
-        goal_sprite.custom_size.unwrap(),
-    )
-    .is_some()
-    {
-        app_state.set(GameState::WinMenu).unwrap();
     }
 }
 
