@@ -12,8 +12,7 @@ use crate::{
     loading::{GameAssets, UIAssets},
     stats::{
         SkinColor, Stats, StatsRes, Wealth, JUMP_HEIGHT_DEPRESSED_PX, MAX_DEPRE_DURATION,
-        MIN_DEPRE_DURATION, MIN_TIME_BETWEEN_DEPRE, RUN_STOP_RATE_DEPRESSED,
-        RUN_TOP_SPEED_DEPRESSED, RUN_TOP_SPEED_RATE_DEPRESSED,
+        MAX_DEPRE_DURATION, MIN_DEPRE_DURATION, MIN_TIME_BETWEEN_DEPRE,
     },
     GameState,
 };
@@ -73,7 +72,7 @@ const PLAYER_HEIGHT_HALF: f32 = PLAYER_HEIGHT / 2.0;
 const PLAYER_BLINK_DURATION: f64 = 1.5;
 
 // JUMP
-const GRAVITY: f32 = -1422.0;
+pub const GRAVITY: f32 = -1422.0;
 // const COYOTE_TIME: f32 = 80.0; // ms after falling a platform that still can jump
 // const JUMP_BUFFER_TIME: f32 = 80.0; // ms before touching ground that can be jumped
 
@@ -491,21 +490,21 @@ fn handle_input(
     let top_speed;
     let top_speed_rate;
     let stop_rate;
-    let jump_height_px;
+    let jump_force;
 
     if player.depressed_until > time.seconds_since_startup() {
-        top_speed = RUN_TOP_SPEED_DEPRESSED;
-        top_speed_rate = RUN_TOP_SPEED_RATE_DEPRESSED;
-        stop_rate = RUN_STOP_RATE_DEPRESSED;
-        jump_height_px = JUMP_HEIGHT_DEPRESSED_PX;
+        top_speed = stats.0.top_speed_depressed;
+        top_speed_rate = stats.0.top_speed_rate_depressed;
+        stop_rate = stats.0.stop_rate_depressed;
+        jump_force = stats.0.jump_force_depressed;
     } else {
         top_speed = stats.0.top_speed;
         top_speed_rate = stats.0.top_speed_rate;
         stop_rate = stats.0.stop_rate;
-        jump_height_px = stats.0.jump_height_px;
+        jump_force = stats.0.jump_force;
     }
 
-    let jump_force = (-2.0 * GRAVITY * jump_height_px).sqrt() - GRAVITY * time_delta;
+    let jump_force = jump_force - GRAVITY * time_delta;
     let is_grounded = velocity.y == 0.0;
     let is_coyote_time = velocity.y < 0.0 && velocity.y > -150.0; // Naive implementation
 

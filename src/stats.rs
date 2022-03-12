@@ -3,21 +3,20 @@ use rand::{
     Rng,
 };
 
-use crate::game::PLAYER_HEIGHT;
+use crate::game::{GRAVITY, PLAYER_HEIGHT};
 
 // RUN
-const RUN_TOP_SPEED_STRONG: f32 = 200.0;
-const RUN_TOP_SPEED_WEAK: f32 = 130.0;
-pub const RUN_TOP_SPEED_DEPRESSED: f32 = 40.0;
-const RUN_TOP_SPEED_TIME: f32 = 100.0; // Time in ms to get to top speed
-const RUN_STOP_TIME: f32 = 50.0; // Time in ms to stop
+const RUN_TOP_SPEED_STRONG: f32 = 180.0;
+const RUN_TOP_SPEED_WEAK: f32 = 150.0;
+const RUN_TOP_SPEED_DEPRESSED: f32 = 80.0;
+const RUN_TOP_SPEED_TIME: f32 = 150.0; // Time in ms to get to top speed
+const RUN_STOP_TIME: f32 = 80.0; // Time in ms to stop
 const RUN_TOP_SPEED_RATE_STRONG: f32 = RUN_TOP_SPEED_STRONG / (RUN_TOP_SPEED_TIME / 1000.0);
 const RUN_STOP_RATE_STRONG: f32 = RUN_TOP_SPEED_STRONG / (RUN_STOP_TIME / 1000.0);
 const RUN_TOP_SPEED_RATE_WEAK: f32 = RUN_TOP_SPEED_WEAK / (RUN_TOP_SPEED_TIME / 1000.0);
 const RUN_STOP_RATE_WEAK: f32 = RUN_TOP_SPEED_WEAK / (RUN_STOP_TIME / 1000.0);
-pub const RUN_TOP_SPEED_RATE_DEPRESSED: f32 =
-    RUN_TOP_SPEED_DEPRESSED / (RUN_TOP_SPEED_TIME / 1000.0);
-pub const RUN_STOP_RATE_DEPRESSED: f32 = RUN_TOP_SPEED_DEPRESSED / (RUN_STOP_TIME / 1000.0);
+const RUN_TOP_SPEED_RATE_DEPRESSED: f32 = RUN_TOP_SPEED_DEPRESSED / (RUN_TOP_SPEED_TIME / 1000.0);
+const RUN_STOP_RATE_DEPRESSED: f32 = RUN_TOP_SPEED_DEPRESSED / (RUN_STOP_TIME / 1000.0);
 
 // JUMP
 const JUMP_HEIGHT_STRONG: f32 = 4.0; // Height in "Player Heights"
@@ -25,7 +24,7 @@ const JUMP_HEIGHT_STRONG_PX: f32 = (JUMP_HEIGHT_STRONG - 1.0) * PLAYER_HEIGHT;
 const JUMP_HEIGHT_WEAK: f32 = 3.0; // Height in "Player Heights"
 const JUMP_HEIGHT_WEAK_PX: f32 = (JUMP_HEIGHT_WEAK - 1.0) * PLAYER_HEIGHT;
 const JUMP_HEIGHT_DEPRESSED: f32 = 2.0; // Height in "Player Heights"
-pub const JUMP_HEIGHT_DEPRESSED_PX: f32 = (JUMP_HEIGHT_DEPRESSED - 1.0) * PLAYER_HEIGHT;
+const JUMP_HEIGHT_DEPRESSED_PX: f32 = (JUMP_HEIGHT_DEPRESSED - 1.0) * PLAYER_HEIGHT;
 
 // DEPRESSIVE STATE
 pub const MIN_DEPRE_DURATION: f64 = 2.0;
@@ -131,9 +130,13 @@ pub struct Stats {
     pub depre_chance: f64,
     pub can_skip_one_way_platforms: bool,
     pub top_speed: f32,
+    pub top_speed_depressed: f32,
     pub top_speed_rate: f32,
+    pub top_speed_rate_depressed: f32,
     pub stop_rate: f32,
-    pub jump_height_px: f32,
+    pub stop_rate_depressed: f32,
+    pub jump_force: f32,
+    pub jump_force_depressed: f32,
     pub lifes: i32,
 }
 
@@ -162,21 +165,25 @@ impl Stats {
         let is_depressive = mental_health == MentalHealth::Depressive;
         let depre_chance = rand::thread_rng().gen_range(MIN_DEPRE_CHANCE..MAX_DEPRE_CHANCE);
         let can_skip_one_way_platforms = is_male;
+        let top_speed_depressed = RUN_TOP_SPEED_DEPRESSED;
+        let top_speed_rate_depressed = RUN_TOP_SPEED_RATE_DEPRESSED;
+        let stop_rate_depressed = RUN_STOP_RATE_DEPRESSED;
+        let jump_force_depressed = (-2.0 * GRAVITY * JUMP_HEIGHT_DEPRESSED_PX).sqrt();
         let top_speed;
         let top_speed_rate;
         let stop_rate;
-        let jump_height_px;
+        let jump_force;
 
         if strength == Strength::Strong {
             top_speed = RUN_TOP_SPEED_STRONG;
             top_speed_rate = RUN_TOP_SPEED_RATE_STRONG;
             stop_rate = RUN_STOP_RATE_STRONG;
-            jump_height_px = JUMP_HEIGHT_STRONG_PX;
+            jump_force = (-2.0 * GRAVITY * JUMP_HEIGHT_STRONG_PX).sqrt();
         } else {
             top_speed = RUN_TOP_SPEED_WEAK;
             top_speed_rate = RUN_TOP_SPEED_RATE_WEAK;
             stop_rate = RUN_STOP_RATE_WEAK;
-            jump_height_px = JUMP_HEIGHT_WEAK_PX;
+            jump_force = (-2.0 * GRAVITY * JUMP_HEIGHT_WEAK_PX).sqrt();
         }
 
         // Lifes
@@ -199,14 +206,18 @@ impl Stats {
             strength,
             wealth,
             // Computed
-            is_depressive,
-            depre_chance,
             can_skip_one_way_platforms,
-            top_speed,
-            top_speed_rate,
-            stop_rate,
-            jump_height_px,
+            depre_chance,
+            is_depressive,
+            jump_force,
+            jump_force_depressed,
             lifes,
+            stop_rate,
+            stop_rate_depressed,
+            top_speed,
+            top_speed_depressed,
+            top_speed_rate,
+            top_speed_rate_depressed,
         }
     }
 
