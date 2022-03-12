@@ -48,6 +48,8 @@ pub struct UIAssets {
 pub struct GameAssets {
     #[asset(path = "fortuna.ldtk")]
     pub map: Handle<LdtkAsset>,
+    #[asset(path = "player.png")]
+    pub player: Handle<Image>,
 }
 
 fn hot_reload(_asset_server: Res<AssetServer>) {

@@ -50,6 +50,7 @@ impl Plugin for GamePlugin {
                     .with_system(show_depressed_text.after("player_color"))
                     .with_system(handle_input.label("input").after("player_color"))
                     .with_system(player_movement.label("movement").after("input"))
+                    .with_system(player_animation.after("movement"))
                     .with_system(camera::camera_movement.after("movement"))
                     .with_system(goo::goo_movement.label("goo_movement"))
                     .with_system(goo::goo_collision.after("goo_movement").after("movement"))
@@ -128,8 +129,15 @@ impl<T: Copy> BBox<T> {
 #[derive(Component)]
 struct GameStateEntity;
 
+#[derive(PartialEq)]
+enum PlayerDirection {
+    Left,
+    Right,
+}
+
 #[derive(Component)]
 pub struct Player {
+    direction: PlayerDirection,
     depressed_until: f64,
     blink_until: f64,
     lifes: i32,
@@ -328,6 +336,7 @@ fn setup_obstacles(
 
 fn setup_entities(
     stats: Res<StatsRes>,
+    game_assets: Res<GameAssets>,
     mut player_positions: ResMut<PlayerPositionsRes>,
     mut commands: Commands,
     entities: Query<(&Transform, &EntityInstance), Added<EntityInstance>>,
@@ -364,14 +373,16 @@ fn setup_entities(
 
         commands
             .spawn_bundle(SpriteBundle {
+                texture: game_assets.player.clone(),
                 sprite: Sprite {
                     color: Color::BLACK,
-                    custom_size: Some(Vec2::new(PLAYER_WIDTH, PLAYER_HEIGHT)),
+                    custom_size: Some(Vec2::new(48.0, 48.0)),
                     ..Default::default()
                 },
                 ..Default::default()
             })
             .insert(Player {
+                direction: PlayerDirection::Right,
                 depressed_until: 0.0,
                 blink_until: 0.0,
                 lifes: stats.0.lifes,
@@ -509,8 +520,10 @@ fn handle_input(
     }
 
     if keys.pressed(KeyCode::Left) {
+        player.direction = PlayerDirection::Left;
         velocity.x = (velocity.x - top_speed_rate * time_delta).max(-top_speed);
     } else if keys.pressed(KeyCode::Right) {
+        player.direction = PlayerDirection::Right;
         velocity.x = (velocity.x + top_speed_rate * time_delta).min(top_speed);
     } else if velocity.x > 0.0 {
         velocity.x = (velocity.x - stop_rate * time_delta).max(0.0);
@@ -640,6 +653,21 @@ fn player_movement(
             position.value.y = pos_y;
         }
     }
+}
+
+fn player_animation(
+    mut player_query: Query<
+        (&mut Transform, &mut Sprite, &Player, &Position, &Velocity),
+        With<Player>,
+    >,
+) {
+    let (mut sprite_transform, mut sprite, player, position, velocity) = player_query.single_mut();
+
+    sprite_transform.translation.x = position.value.x;
+    sprite_transform.translation.y = position.value.y + 8.0;
+    sprite_transform.translation.z = 10.0;
+
+    sprite.flip_x = player.direction == PlayerDirection::Left;
 }
 
 fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Query<&mut Player>) {
