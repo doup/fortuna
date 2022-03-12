@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::GameState;
 
 use super::{
-    get_first_obstacle_pos_downward, to_tile_space, ObstaclesRes, Player, Point,
+    get_first_obstacle_pos_downward, to_tile_space, ObstaclesRes, Player, Point, Position,
     PLAYER_BLINK_DURATION, TILE_SIZE,
 };
 
@@ -31,17 +31,17 @@ impl Goo {
 
 pub fn goo_movement(
     time: Res<Time>,
-    players: Query<&Transform, (With<Player>, Without<Goo>)>,
+    players: Query<&Position, (With<Player>, Without<Goo>)>,
     mut goo_query: Query<(&mut Goo, &mut Transform, &Sprite)>,
 ) {
-    let player_transform = players.single();
+    let player_position = players.single();
     let (mut goo, mut transform, sprite) = goo_query.single_mut();
 
     goo.y = GOO_INITIAL_POS - goo.regress
         + (time.seconds_since_startup() - goo.start_time) as f32 * GOO_SPEED
         + ((time.seconds_since_startup() * 2.0).sin() as f32) * GOO_SIN_AMPLITUDE;
 
-    transform.translation.x = player_transform.translation.x;
+    transform.translation.x = player_position.value.x;
     transform.translation.y = goo.y - sprite.custom_size.unwrap().y / 2.0;
     transform.translation.z = 500.0;
 }
@@ -49,14 +49,14 @@ pub fn goo_movement(
 pub fn goo_collision(
     time: Res<Time>,
     obstacles: Res<ObstaclesRes>,
-    mut player_query: Query<(&Transform, &mut Player), (With<Player>, Without<Goo>)>,
+    mut player_query: Query<(&Position, &mut Player), (With<Player>, Without<Goo>)>,
     mut app_state: ResMut<State<GameState>>,
     mut goo_query: Query<&mut Goo>,
 ) {
     let mut goo = goo_query.single_mut();
-    let (player_transform, mut player) = player_query.single_mut();
+    let (player_position, mut player) = player_query.single_mut();
 
-    if player_transform.translation.y < goo.y {
+    if player_position.value.y < goo.y {
         player.lifes -= 1;
 
         if player.lifes == 0 {
@@ -64,10 +64,7 @@ pub fn goo_collision(
         } else {
             let first_down_obstacle_tile_pos = get_first_obstacle_pos_downward(
                 &obstacles.map,
-                to_tile_space(Point(
-                    player_transform.translation.x,
-                    player_transform.translation.y,
-                )),
+                to_tile_space(Point(player_position.value.x, player_position.value.y)),
             )
             .unwrap();
 

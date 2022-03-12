@@ -1,4 +1,4 @@
-use crate::game::{LifesText, Player, PlayerPositionsRes};
+use crate::game::{LifesText, Player, PlayerPositionsRes, Position};
 use crate::loading::UIAssets;
 use crate::stats::{Intelligence, SkinColor, Stats, StatsRes, Strength, Wealth};
 use crate::ui::{handle_ui_buttons, NORMAL_BUTTON};
@@ -337,7 +337,7 @@ fn handle_reborn_button(
     mut commands: Commands,
     mut stats: ResMut<StatsRes>,
     mut stats_desc_query: Query<&mut Text, (With<StatsDescription>, Without<LifesText>)>,
-    mut player_query: Query<&mut Transform, With<Player>>,
+    mut player_query: Query<&mut Position, With<Player>>,
     mut lifes_query: Query<&mut Text, (With<LifesText>, Without<StatsDescription>)>,
     player_positions: Res<PlayerPositionsRes>,
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<ReBornButton>)>,
@@ -365,9 +365,9 @@ fn handle_reborn_button(
             };
 
             let &position_transform = player_positions.0.get(pos).unwrap();
-            let mut player_transform = player_query.single_mut();
+            let mut player_position = player_query.single_mut();
 
-            player_transform.translation = position_transform.translation.clone();
+            player_position.value = position_transform.translation.clone();
 
             // Update lifes
             let mut lifes_text = lifes_query.single_mut();

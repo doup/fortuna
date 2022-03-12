@@ -137,6 +137,11 @@ pub struct Player {
 }
 
 #[derive(Component)]
+pub struct Position {
+    pub value: Vec3,
+}
+
+#[derive(Component)]
 struct Velocity {
     x: f32,
     y: f32,
@@ -364,7 +369,6 @@ fn setup_entities(
                     custom_size: Some(Vec2::new(PLAYER_WIDTH, PLAYER_HEIGHT)),
                     ..Default::default()
                 },
-                transform: transform.clone(),
                 ..Default::default()
             })
             .insert(Player {
@@ -372,6 +376,9 @@ fn setup_entities(
                 blink_until: 0.0,
                 lifes: stats.0.lifes,
                 bounce_force: None,
+            })
+            .insert(Position {
+                value: transform.translation.clone(),
             })
             .insert(Velocity { x: 0.0, y: 0.0 })
             .insert(GameStateEntity);
@@ -537,9 +544,9 @@ fn player_movement(
     stats: Res<StatsRes>,
     time: Res<Time>,
     obstacles: Res<ObstaclesRes>,
-    mut player_query: Query<(&mut Velocity, &mut Transform), With<Player>>,
+    mut player_query: Query<(&mut Position, &mut Velocity), With<Player>>,
 ) {
-    let (mut velocity, mut transform) = player_query.single_mut();
+    let (mut position, mut velocity) = player_query.single_mut();
     let time_delta = time.delta_seconds();
 
     velocity.y += GRAVITY * time_delta;
@@ -548,16 +555,16 @@ fn player_movement(
     let is_moving_up = velocity.y > 0.0;
 
     if velocity.x != 0.0 {
-        let pos_x = transform.translation.x + velocity.x * time_delta;
-        let bottom = transform.translation.y - PLAYER_HEIGHT_HALF + SKIN_SIZE;
-        let top = transform.translation.y + PLAYER_HEIGHT_HALF - SKIN_SIZE;
+        let pos_x = position.value.x + velocity.x * time_delta;
+        let bottom = position.value.y - PLAYER_HEIGHT_HALF + SKIN_SIZE;
+        let top = position.value.y + PLAYER_HEIGHT_HALF - SKIN_SIZE;
 
         let horizontal_bbox = if is_moving_right {
-            let left = transform.translation.x + PLAYER_WIDTH_HALF;
+            let left = position.value.x + PLAYER_WIDTH_HALF;
             let right = left + velocity.x.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         } else {
-            let right = transform.translation.x - PLAYER_WIDTH_HALF;
+            let right = position.value.x - PLAYER_WIDTH_HALF;
             let left = right - velocity.x.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         };
@@ -579,27 +586,27 @@ fn player_movement(
         if nearest_obstacle_x.is_some() {
             let nearest_obstacle_x = nearest_obstacle_x.unwrap();
 
-            transform.translation.x = if is_moving_right {
+            position.value.x = if is_moving_right {
                 pos_x.min(nearest_obstacle_x)
             } else {
                 pos_x.max(nearest_obstacle_x)
             };
         } else {
-            transform.translation.x = pos_x;
+            position.value.x = pos_x;
         }
     }
 
     if velocity.y != 0.0 {
-        let pos_y = transform.translation.y + velocity.y * time_delta;
-        let left = transform.translation.x - PLAYER_WIDTH_HALF + SKIN_SIZE;
-        let right = transform.translation.x + PLAYER_WIDTH_HALF - SKIN_SIZE;
+        let pos_y = position.value.y + velocity.y * time_delta;
+        let left = position.value.x - PLAYER_WIDTH_HALF + SKIN_SIZE;
+        let right = position.value.x + PLAYER_WIDTH_HALF - SKIN_SIZE;
 
         let vertical_bbox = if is_moving_up {
-            let bottom = transform.translation.y + PLAYER_HEIGHT_HALF;
+            let bottom = position.value.y + PLAYER_HEIGHT_HALF;
             let top = bottom + velocity.y.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         } else {
-            let top = transform.translation.y - PLAYER_HEIGHT_HALF;
+            let top = position.value.y - PLAYER_HEIGHT_HALF;
             let bottom = top - velocity.y.abs() * time_delta;
             BBox::new((left, bottom), (right, top))
         };
@@ -624,13 +631,13 @@ fn player_movement(
             if is_moving_up && (nearest_obstacle_y < pos_y)
                 || !is_moving_up && (nearest_obstacle_y > pos_y)
             {
-                transform.translation.y = nearest_obstacle_y;
+                position.value.y = nearest_obstacle_y;
                 velocity.y = 0.0;
             } else {
-                transform.translation.y = pos_y;
+                position.value.y = pos_y;
             };
         } else {
-            transform.translation.y = pos_y;
+            position.value.y = pos_y;
         }
     }
 }

@@ -3,7 +3,7 @@ use bevy_ecs_ldtk::prelude::*;
 
 use crate::stats::{SkinColor, StatsRes, Wealth};
 
-use super::{Player, PLAYER_WIDTH};
+use super::{Player, Position, PLAYER_WIDTH};
 
 pub const BOUNCER_FORCE: f32 = 2500.0;
 pub const BOUNCER_DURATION: f32 = 0.5;
@@ -64,16 +64,16 @@ pub fn bounce_player(
     stats: Res<StatsRes>,
     time: Res<Time>,
     mut player_query: Query<
-        (&mut Transform, &mut Player, &Sprite),
+        (&mut Position, &mut Player, &Sprite),
         (With<Player>, Without<Bouncer>),
     >,
     bouncer_query: Query<(&Transform, &Sprite, &Bouncer), (With<Bouncer>, Without<Player>)>,
 ) {
-    let (mut player_transform, mut player, player_sprite) = player_query.single_mut();
+    let (mut player_position, mut player, player_sprite) = player_query.single_mut();
 
     for (bouncer_transform, bouncer_sprite, bouncer) in bouncer_query.iter() {
         let collision = collide(
-            player_transform.translation,
+            player_position.value,
             player_sprite.custom_size.unwrap(),
             bouncer_transform.translation,
             bouncer_sprite.custom_size.unwrap(),
@@ -86,9 +86,9 @@ pub fn bounce_player(
 
         if !allow && collision.is_some() {
             if bouncer.direction == 1.0 {
-                player_transform.translation.x += 2.0 * PLAYER_WIDTH;
+                player_position.value.x += 2.0 * PLAYER_WIDTH;
             } else {
-                player_transform.translation.x -= 2.0 * PLAYER_WIDTH;
+                player_position.value.x -= 2.0 * PLAYER_WIDTH;
             }
 
             if let None = player.bounce_force {

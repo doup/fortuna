@@ -1,4 +1,4 @@
-use super::Player;
+use super::{Player, Position};
 use bevy::prelude::*;
 
 // const CAMERA_WINDOW_HEIGHT: f32 = 0.3; // Percent
@@ -10,16 +10,16 @@ pub struct GameCamera;
 
 pub fn camera_movement(
     timer: Res<Time>,
-    players: Query<&Transform, (With<Player>, Without<GameCamera>)>,
+    players: Query<&Position, (With<Player>, Without<GameCamera>)>,
     mut cameras: Query<&mut Transform, With<GameCamera>>,
 ) {
-    let player_transform = players.single();
+    let player_position = players.single();
     let mut camera_transform = cameras.single_mut();
 
     // Smoothed position locking
     let dir = Vec2::new(
-        player_transform.translation.x - camera_transform.translation.x,
-        player_transform.translation.y - camera_transform.translation.y,
+        player_position.value.x - camera_transform.translation.x,
+        player_position.value.y - camera_transform.translation.y,
     );
     let length = dir.length();
     let dir = dir.normalize() * (length * timer.delta_seconds() * 3.0);
