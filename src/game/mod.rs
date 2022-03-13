@@ -73,8 +73,8 @@ const PLAYER_BLINK_DURATION: f64 = 1.5;
 
 // JUMP
 pub const GRAVITY: f32 = -1422.0;
-// const JUMP_BUFFER_TIME: f32 = 80.0; // ms before touching ground that can be jumped
 const COYOTE_TIME: f64 = 0.125; // seconds after falling from a platform that still can jump
+const JUMP_BUFFER_TIME: f64 = 0.1; // seconds before touching ground that jump will be valid
 
 // RESOURCES
 pub struct ObstaclesRes {
@@ -142,6 +142,7 @@ pub struct Player {
     lifes: i32,
     bounce_force: Option<f32>,
     last_ground_time: Option<f64>,
+    buffer_jump_time: Option<f64>,
 }
 
 #[derive(Component)]
@@ -388,6 +389,7 @@ fn setup_entities(
                 last_ground_time: None,
                 lifes: stats.0.lifes,
                 bounce_force: None,
+                buffer_jump_time: None,
             })
             .insert(Position {
                 value: transform.translation.clone(),
@@ -506,16 +508,28 @@ fn handle_input(
         jump_force = stats.0.jump_force;
     }
 
-    if keys.just_pressed(KeyCode::Space) {
-        if let Some(last_ground_time) = player.last_ground_time {
-            let jump_force = jump_force - GRAVITY * time_delta; // Correct by gravity… why?? I don't remember :facepalm:
-            let can_jump = time.seconds_since_startup() < last_ground_time + COYOTE_TIME;
+    if let Some(last_ground_time) = player.last_ground_time {
+        // Player is in the ground
+        let jump_force = jump_force - GRAVITY * time_delta; // Correct by gravity… why?? I don't remember :facepalm:
+        let is_in_jump_window = time.seconds_since_startup() < last_ground_time + COYOTE_TIME;
+        let is_buffered_jump_valid = if let Some(buffer_jump_time) = player.buffer_jump_time {
+            (time.seconds_since_startup() - buffer_jump_time) < JUMP_BUFFER_TIME
+        } else {
+            false
+        };
+        let can_jump =
+            keys.just_pressed(KeyCode::Space) && is_in_jump_window || is_buffered_jump_valid;
 
-            if can_jump {
-                velocity.y = jump_force;
-                player.last_ground_time = None;
-            }
+        if can_jump {
+            velocity.y = jump_force;
+            player.last_ground_time = None;
         }
+
+        // Clear buffered jump time
+        player.buffer_jump_time = None;
+    } else if keys.just_pressed(KeyCode::Space) {
+        // Player is in the air AND "space" is pressed
+        player.buffer_jump_time = Some(time.seconds_since_startup());
     }
 
     if keys.just_pressed(KeyCode::R) {
