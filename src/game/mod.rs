@@ -73,8 +73,8 @@ const PLAYER_BLINK_DURATION: f64 = 1.5;
 
 // JUMP
 pub const GRAVITY: f32 = -1422.0;
-// const COYOTE_TIME: f32 = 80.0; // ms after falling a platform that still can jump
 // const JUMP_BUFFER_TIME: f32 = 80.0; // ms before touching ground that can be jumped
+const COYOTE_TIME: f64 = 0.125; // seconds after falling from a platform that still can jump
 
 // RESOURCES
 pub struct ObstaclesRes {
@@ -141,6 +141,7 @@ pub struct Player {
     blink_until: f64,
     lifes: i32,
     bounce_force: Option<f32>,
+    last_ground_time: Option<f64>,
 }
 
 #[derive(Component)]
@@ -384,6 +385,7 @@ fn setup_entities(
                 direction: PlayerDirection::Right,
                 depressed_until: 0.0,
                 blink_until: 0.0,
+                last_ground_time: None,
                 lifes: stats.0.lifes,
                 bounce_force: None,
             })
@@ -504,13 +506,15 @@ fn handle_input(
         jump_force = stats.0.jump_force;
     }
 
-    let jump_force = jump_force - GRAVITY * time_delta;
-    let is_grounded = velocity.y == 0.0;
-    let is_coyote_time = velocity.y < 0.0 && velocity.y > -150.0; // Naive implementation
-
     if keys.just_pressed(KeyCode::Space) {
-        if is_grounded || is_coyote_time {
-            velocity.y = jump_force;
+        if let Some(last_ground_time) = player.last_ground_time {
+            let jump_force = jump_force - GRAVITY * time_delta; // Correct by gravity… why?? I don't remember :facepalm:
+            let can_jump = time.seconds_since_startup() < last_ground_time + COYOTE_TIME;
+
+            if can_jump {
+                velocity.y = jump_force;
+                player.last_ground_time = None;
+            }
         }
     }
 
@@ -556,9 +560,9 @@ fn player_movement(
     stats: Res<StatsRes>,
     time: Res<Time>,
     obstacles: Res<ObstaclesRes>,
-    mut player_query: Query<(&mut Position, &mut Velocity), With<Player>>,
+    mut player_query: Query<(&mut Position, &mut Velocity, &mut Player), With<Player>>,
 ) {
-    let (mut position, mut velocity) = player_query.single_mut();
+    let (mut position, mut velocity, mut player) = player_query.single_mut();
     let time_delta = time.delta_seconds();
 
     velocity.y += GRAVITY * time_delta;
@@ -645,6 +649,10 @@ fn player_movement(
             {
                 position.value.y = nearest_obstacle_y;
                 velocity.y = 0.0;
+
+                if !is_moving_up {
+                    player.last_ground_time = Some(time.seconds_since_startup());
+                }
             } else {
                 position.value.y = pos_y;
             };
