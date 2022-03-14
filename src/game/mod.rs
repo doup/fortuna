@@ -209,32 +209,21 @@ fn setup_game(
         })
         .insert(GameStateEntity);
 
+    // Add depressed message
     commands
-        .spawn_bundle(TextBundle {
-            style: Style {
-                display: Display::None,
-                align_self: AlignSelf::FlexStart,
-                position_type: PositionType::Absolute,
-                position: Rect {
-                    top: Val::Px(20.0),
-                    left: Val::Px(20.0),
-                    ..Default::default()
+        .spawn_bundle(Text2dBundle {
+            text: Text::with_section(
+                "I don't want to keep jumping...",
+                TextStyle {
+                    font: ui_assets.font.clone(),
+                    font_size: 10.0,
+                    color: Color::BLACK,
                 },
-                ..Default::default()
-            },
-            // Use `Text` directly
-            text: Text {
-                // Construct a `Vec` of `TextSection`s
-                sections: vec![TextSection {
-                    value: "I don't want to keep jumping...".to_string(),
-                    style: TextStyle {
-                        font: ui_assets.font.clone(),
-                        font_size: 30.0,
-                        color: Color::BLACK,
-                    },
-                }],
-                ..Default::default()
-            },
+                TextAlignment {
+                    vertical: VerticalAlign::Center,
+                    horizontal: HorizontalAlign::Center,
+                },
+            ),
             ..Default::default()
         })
         .insert(GameStateEntity)
@@ -469,17 +458,17 @@ fn player_color(stats: Res<StatsRes>, mut player_query: Query<&mut Sprite, With<
 
 fn show_depressed_text(
     time: Res<Time>,
-    mut depressed_text_query: Query<&mut Style, With<DepressedText>>,
-    player_query: Query<&Player, With<Player>>,
+    mut depressed_text_query: Query<
+        (&mut Visibility, &mut Transform),
+        (With<DepressedText>, Without<Player>),
+    >,
+    player_query: Query<(&Player, &Transform), With<Player>>,
 ) {
-    let player = player_query.single();
-    let mut depressed_text = depressed_text_query.single_mut();
+    let (player, transform) = player_query.single();
+    let (mut depre_visibility, mut depre_transform) = depressed_text_query.single_mut();
 
-    depressed_text.display = if player.depressed_until > time.seconds_since_startup() {
-        Display::Flex
-    } else {
-        Display::None
-    };
+    depre_visibility.is_visible = player.depressed_until > time.seconds_since_startup();
+    depre_transform.translation = transform.translation.clone() + Vec3::new(0.0, 24.0, 0.0);
 }
 
 fn handle_input(
@@ -701,9 +690,6 @@ fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Query<
         if rand::thread_rng().gen_range(0.0..1.0) < stats.0.depre_chance {
             player.depressed_until = time.seconds_since_startup()
                 + rand::thread_rng().gen_range(MIN_DEPRE_DURATION..MAX_DEPRE_DURATION);
-
-            println!("Depressed… :-(");
-            // Add message
         }
     }
 }
