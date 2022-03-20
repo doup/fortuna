@@ -83,6 +83,7 @@ const JUMP_BUFFER_TIME: f64 = 0.1; // seconds before touching ground that jump w
 struct Animations {
     idle: Handle<SpriteSheetAnimation>,
     run: Handle<SpriteSheetAnimation>,
+    jump: Vec<Handle<SpriteSheetAnimation>>,
 }
 
 pub struct ObstaclesRes {
@@ -383,12 +384,55 @@ fn setup_entities(
             Duration::from_millis(30),
         ));
 
+        animations.jump = vec![
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                25..=25,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                26..=26,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                27..=27,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                28..=28,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                29..=29,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                30..=30,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                31..=31,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                32..=32,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                33..=33,
+                Duration::from_millis(30),
+            )),
+            animation_sheets.add(SpriteSheetAnimation::from_range(
+                34..=34,
+                Duration::from_millis(30),
+            )),
+        ];
+
         commands
             .spawn_bundle(SpriteSheetBundle {
                 texture_atlas: textures.add(TextureAtlas::from_grid(
                     game_assets.player_anim.clone(),
                     Vec2::new(48.0, 48.0),
-                    25,
+                    35,
                     1,
                 )),
                 // sprite: Sprite {
@@ -700,6 +744,7 @@ fn player_movement(
 }
 
 fn player_animation(
+    stats: Res<StatsRes>,
     animations: Res<Animations>,
     mut player_query: Query<
         (
@@ -716,8 +761,9 @@ fn player_animation(
     let (mut sprite_transform, mut sprite, mut animation, player, position, velocity) =
         player_query.single_mut();
 
-    let is_grounded = velocity.y == 0.0;
-    let is_moving = velocity.x != 0.0;
+    let is_grounded = player.last_ground_time.is_some();
+    let is_running = is_grounded && velocity.x != 0.0;
+    let is_jumping = !is_grounded;
 
     sprite_transform.translation.x = position.value.x;
     sprite_transform.translation.y = position.value.y + 8.0;
@@ -725,7 +771,16 @@ fn player_animation(
 
     sprite.flip_x = player.direction == PlayerDirection::Left;
 
-    if is_grounded && is_moving {
+    if is_jumping {
+        // Map velocity.y to animation frame
+        let force_range = stats.0.jump_force * 2.0;
+        let total_frames = animations.jump.len() as f32;
+        let velocity = velocity.y.max(-stats.0.jump_force).min(stats.0.jump_force);
+        let frame = (force_range - (velocity + stats.0.jump_force)) / force_range;
+        let frame = (frame * total_frames).min(total_frames - 1.0) as usize;
+
+        *animation = animations.jump[frame].clone();
+    } else if is_running {
         *animation = animations.run.clone();
     } else {
         *animation = animations.idle.clone();
