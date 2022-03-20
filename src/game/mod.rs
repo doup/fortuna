@@ -683,10 +683,12 @@ fn player_movement(
                 || !is_moving_up && (nearest_obstacle_y > pos_y)
             {
                 position.value.y = nearest_obstacle_y;
-                velocity.y = 0.0;
 
                 if !is_moving_up {
+                    velocity.y = 0.0;
                     player.last_ground_time = Some(time.seconds_since_startup());
+                } else {
+                    velocity.y = -velocity.y * 0.1;
                 }
             } else {
                 position.value.y = pos_y;
