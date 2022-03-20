@@ -3,10 +3,11 @@ mod camera;
 mod goal;
 mod goo;
 
+use benimator::{Play, SpriteSheetAnimation};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
 use rand::Rng;
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use crate::{
     loading::{GameAssets, UIAssets},
@@ -22,6 +23,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(LdtkPlugin)
+            .init_resource::<Animations>()
             .insert_resource(PlayerPositionsRes(vec![]))
             .insert_resource(StatsRes(Stats::new()))
             .insert_resource(LevelSelection::Index(0))
@@ -77,6 +79,12 @@ const COYOTE_TIME: f64 = 0.125; // seconds after falling from a platform that st
 const JUMP_BUFFER_TIME: f64 = 0.1; // seconds before touching ground that jump will be valid
 
 // RESOURCES
+#[derive(Default)]
+struct Animations {
+    idle: Handle<SpriteSheetAnimation>,
+    run: Handle<SpriteSheetAnimation>,
+}
+
 pub struct ObstaclesRes {
     map: HashMap<Point<i32>, Obstacle>,
 }
@@ -327,6 +335,9 @@ fn setup_obstacles(
 fn setup_entities(
     stats: Res<StatsRes>,
     game_assets: Res<GameAssets>,
+    mut animations: ResMut<Animations>,
+    mut textures: ResMut<Assets<TextureAtlas>>,
+    mut animation_sheets: ResMut<Assets<SpriteSheetAnimation>>,
     mut player_positions: ResMut<PlayerPositionsRes>,
     mut commands: Commands,
     entities: Query<(&Transform, &EntityInstance), Added<EntityInstance>>,
@@ -361,16 +372,34 @@ fn setup_entities(
 
         let &transform = player_positions.0.get(pos).unwrap();
 
+        // Animation
+        animations.idle = animation_sheets.add(SpriteSheetAnimation::from_range(
+            0..=0,
+            Duration::from_millis(30),
+        ));
+
+        animations.run = animation_sheets.add(SpriteSheetAnimation::from_range(
+            1..=24,
+            Duration::from_millis(30),
+        ));
+
         commands
-            .spawn_bundle(SpriteBundle {
-                texture: game_assets.player.clone(),
-                sprite: Sprite {
-                    color: Color::BLACK,
-                    custom_size: Some(Vec2::new(48.0, 48.0)),
-                    ..Default::default()
-                },
+            .spawn_bundle(SpriteSheetBundle {
+                texture_atlas: textures.add(TextureAtlas::from_grid(
+                    game_assets.player_anim.clone(),
+                    Vec2::new(48.0, 48.0),
+                    25,
+                    1,
+                )),
+                // sprite: Sprite {
+                //     color: Color::BLACK,
+                //     custom_size: Some(Vec2::new(48.0, 48.0)),
+                //     ..Default::default()
+                // },
                 ..Default::default()
             })
+            .insert(animations.idle.clone())
+            .insert(Play)
             .insert(Player {
                 direction: PlayerDirection::Right,
                 depressed_until: 0.0,
@@ -446,14 +475,17 @@ fn setup_entities(
     }
 }
 
-fn player_color(stats: Res<StatsRes>, mut player_query: Query<&mut Sprite, With<Player>>) {
-    let mut sprite = player_query.single_mut();
+fn player_color(
+    stats: Res<StatsRes>,
+    mut player_query: Query<&mut TextureAtlasSprite, With<Player>>,
+) {
+    // let mut sprite = player_query.single_mut();
 
-    sprite.color = match stats.0.color {
-        SkinColor::Light => Color::hex("b8ddf5").unwrap(),
-        SkinColor::Medium => Color::hex("3f789d").unwrap(),
-        SkinColor::Dark => Color::hex("103954").unwrap(),
-    };
+    // sprite.color = match stats.0.color {
+    //     SkinColor::Light => Color::hex("b8ddf5").unwrap(),
+    //     SkinColor::Medium => Color::hex("3f789d").unwrap(),
+    //     SkinColor::Dark => Color::hex("103954").unwrap(),
+    // };
 }
 
 fn show_depressed_text(
@@ -666,18 +698,36 @@ fn player_movement(
 }
 
 fn player_animation(
+    animations: Res<Animations>,
     mut player_query: Query<
-        (&mut Transform, &mut Sprite, &Player, &Position, &Velocity),
+        (
+            &mut Transform,
+            &mut TextureAtlasSprite,
+            &mut Handle<SpriteSheetAnimation>,
+            &Player,
+            &Position,
+            &Velocity,
+        ),
         With<Player>,
     >,
 ) {
-    let (mut sprite_transform, mut sprite, player, position, velocity) = player_query.single_mut();
+    let (mut sprite_transform, mut sprite, mut animation, player, position, velocity) =
+        player_query.single_mut();
+
+    let is_grounded = velocity.y == 0.0;
+    let is_moving = velocity.x != 0.0;
 
     sprite_transform.translation.x = position.value.x;
     sprite_transform.translation.y = position.value.y + 8.0;
     sprite_transform.translation.z = 10.0;
 
     sprite.flip_x = player.direction == PlayerDirection::Left;
+
+    if is_grounded && is_moving {
+        *animation = animations.run.clone();
+    } else {
+        *animation = animations.idle.clone();
+    }
 }
 
 fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Query<&mut Player>) {

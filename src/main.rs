@@ -1,3 +1,4 @@
+use benimator::AnimationPlugin;
 use bevy::prelude::*;
 // use bevy_inspector_egui::WorldInspectorPlugin;
 use doup_fortuna::FortunaPlugin;
@@ -11,6 +12,7 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(AnimationPlugin::default())
         // .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(FortunaPlugin)
         // .add_plugin(bevy_framepace::FramepacePlugin {

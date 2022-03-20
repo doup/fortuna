@@ -19,4 +19,5 @@ bevy_asset_loader = "0.9.0"
 bevy_ecs_ldtk = { version = "0.2.0", features = ["atlas"] }
 bevy-inspector-egui = "0.8.2"
 bevy_framepace = "0.3.0"
+benimator = "2.2.0"
 rand = "0.8.5"

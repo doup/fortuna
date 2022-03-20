@@ -64,7 +64,7 @@ pub fn bounce_player(
     stats: Res<StatsRes>,
     time: Res<Time>,
     mut player_query: Query<
-        (&mut Position, &mut Player, &Sprite),
+        (&mut Position, &mut Player, &TextureAtlasSprite),
         (With<Player>, Without<Bouncer>),
     >,
     bouncer_query: Query<(&Transform, &Sprite, &Bouncer), (With<Bouncer>, Without<Player>)>,
@@ -74,7 +74,7 @@ pub fn bounce_player(
     for (bouncer_transform, bouncer_sprite, bouncer) in bouncer_query.iter() {
         let collision = collide(
             player_position.value,
-            player_sprite.custom_size.unwrap(),
+            Vec2::new(16.0, 32.0),
             bouncer_transform.translation,
             bouncer_sprite.custom_size.unwrap(),
         );

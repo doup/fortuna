@@ -185,6 +185,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 
 [[package]]
+name = "benimator"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83992ec85f7c5f97361cdebb369324609471056d3b941aae5828b6bf407761b0"
+dependencies = [
+ "bevy_app",
+ "bevy_asset",
+ "bevy_core",
+ "bevy_ecs",
+ "bevy_reflect",
+ "bevy_sprite",
+]
+
+[[package]]
 name = "bevy"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1357,6 +1371,7 @@ checksum = "bd0c93bb4b0c6d9b77f4435b0ae98c24d17f1c45b2ff844c6151a07256ca923b"
 name = "doup-fortuna"
 version = "0.1.0"
 dependencies = [
+ "benimator",
  "bevy",
  "bevy-inspector-egui",
  "bevy_asset_loader",
