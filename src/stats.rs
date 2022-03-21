@@ -9,8 +9,8 @@ use crate::game::{GRAVITY, PLAYER_HEIGHT};
 const RUN_TOP_SPEED_STRONG: f32 = 180.0;
 const RUN_TOP_SPEED_WEAK: f32 = 150.0;
 const RUN_TOP_SPEED_DEPRESSED: f32 = 80.0;
-const RUN_TOP_SPEED_TIME: f32 = 150.0; // Time in ms to get to top speed
-const RUN_STOP_TIME: f32 = 60.0; // Time in ms to stop
+const RUN_TOP_SPEED_TIME: f32 = 100.0; // Time in ms to get to top speed
+const RUN_STOP_TIME: f32 = 50.0; // Time in ms to stop
 const RUN_TOP_SPEED_RATE_STRONG: f32 = RUN_TOP_SPEED_STRONG / (RUN_TOP_SPEED_TIME / 1000.0);
 const RUN_STOP_RATE_STRONG: f32 = RUN_TOP_SPEED_STRONG / (RUN_STOP_TIME / 1000.0);
 const RUN_TOP_SPEED_RATE_WEAK: f32 = RUN_TOP_SPEED_WEAK / (RUN_TOP_SPEED_TIME / 1000.0);
