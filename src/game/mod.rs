@@ -154,6 +154,16 @@ pub struct Player {
     buffer_jump_time: Option<f64>,
 }
 
+impl Player {
+    fn is_buffered_jump_valid(&self, seconds_since_startup: f64) -> bool {
+        if let Some(buffer_jump_time) = self.buffer_jump_time {
+            (seconds_since_startup - buffer_jump_time) < JUMP_BUFFER_TIME
+        } else {
+            false
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct Position {
     pub value: Vec3,
@@ -577,11 +587,7 @@ fn handle_input(
         // Player is in the ground
         let jump_force = jump_force - GRAVITY * time_delta; // Correct by gravity… why?? I don't remember :facepalm:
         let is_in_jump_window = time.seconds_since_startup() < last_ground_time + COYOTE_TIME;
-        let is_buffered_jump_valid = if let Some(buffer_jump_time) = player.buffer_jump_time {
-            (time.seconds_since_startup() - buffer_jump_time) < JUMP_BUFFER_TIME
-        } else {
-            false
-        };
+        let is_buffered_jump_valid = player.is_buffered_jump_valid(time.seconds_since_startup());
         let can_jump =
             keys.just_pressed(KeyCode::Space) && is_in_jump_window || is_buffered_jump_valid;
 
@@ -744,8 +750,9 @@ fn player_movement(
 }
 
 fn player_animation(
-    stats: Res<StatsRes>,
     animations: Res<Animations>,
+    stats: Res<StatsRes>,
+    time: Res<Time>,
     mut player_query: Query<
         (
             &mut Transform,
@@ -761,9 +768,10 @@ fn player_animation(
     let (mut sprite_transform, mut sprite, mut animation, player, position, velocity) =
         player_query.single_mut();
 
-    let is_grounded = player.last_ground_time.is_some();
+    let is_grounded = velocity.y == 0.0;
     let is_running = is_grounded && velocity.x != 0.0;
     let is_jumping = !is_grounded;
+    let is_buffered_jump_valid = player.is_buffered_jump_valid(time.seconds_since_startup());
 
     sprite_transform.translation.x = position.value.x;
     sprite_transform.translation.y = position.value.y + 8.0;
@@ -780,6 +788,8 @@ fn player_animation(
         let frame = (frame * total_frames).min(total_frames - 1.0) as usize;
 
         *animation = animations.jump[frame].clone();
+    } else if is_buffered_jump_valid {
+        *animation = animations.jump[0].clone();
     } else if is_running {
         *animation = animations.run.clone();
     } else {
