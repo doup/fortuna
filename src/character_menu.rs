@@ -367,7 +367,7 @@ fn handle_reborn_button(
             let &position_transform = player_positions.0.get(pos).unwrap();
             let mut player_position = player_query.single_mut();
 
-            player_position.value = position_transform.translation.clone();
+            player_position.value = position_transform.translation.truncate();
 
             // Update lifes
             let mut lifes_text = lifes_query.single_mut();
