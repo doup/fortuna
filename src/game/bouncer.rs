@@ -3,7 +3,7 @@ use bevy_ecs_ldtk::prelude::*;
 
 use crate::stats::{SkinColor, StatsRes, Wealth};
 
-use super::{Player, Position, PLAYER_WIDTH};
+use super::{Player, Position, PLAYER_HEIGHT, PLAYER_WIDTH};
 
 pub const BOUNCER_FORCE: f32 = 2500.0;
 pub const BOUNCER_DURATION: f32 = 0.5;
@@ -74,7 +74,7 @@ pub fn bounce_player(
     for (bouncer_transform, bouncer_sprite, bouncer) in bouncer_query.iter() {
         let collision = collide(
             player_position.value,
-            Vec2::new(16.0, 32.0),
+            Vec2::new(PLAYER_WIDTH, PLAYER_HEIGHT),
             bouncer_transform.translation,
             bouncer_sprite.custom_size.unwrap(),
         );

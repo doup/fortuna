@@ -67,8 +67,9 @@ impl Plugin for GamePlugin {
 // PLAYER CONSTANTS
 const TILE_SIZE: f32 = 16.0;
 const SKIN_SIZE: f32 = 2.0;
-const PLAYER_WIDTH: f32 = 16.0;
-pub const PLAYER_HEIGHT: f32 = 32.0;
+pub const PLAYER_WIDTH: f32 = 16.0;
+pub const PLAYER_HEIGHT: f32 = 36.0;
+const PLAYER_SPRITE_HEIGHT: f32 = 48.0;
 const PLAYER_WIDTH_HALF: f32 = PLAYER_WIDTH / 2.0;
 const PLAYER_HEIGHT_HALF: f32 = PLAYER_HEIGHT / 2.0;
 const PLAYER_BLINK_DURATION: f64 = 1.5;
@@ -774,7 +775,8 @@ fn player_animation(
     let is_buffered_jump_valid = player.is_buffered_jump_valid(time.seconds_since_startup());
 
     sprite_transform.translation.x = position.value.x;
-    sprite_transform.translation.y = position.value.y + 8.0;
+    sprite_transform.translation.y =
+        position.value.y + (PLAYER_SPRITE_HEIGHT - PLAYER_HEIGHT) / 2.0;
     sprite_transform.translation.z = 10.0;
 
     sprite.flip_x = player.direction == PlayerDirection::Left;

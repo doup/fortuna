@@ -1,6 +1,6 @@
 use crate::GameState;
 
-use super::{Player, Position};
+use super::{Player, Position, PLAYER_HEIGHT, PLAYER_WIDTH};
 use bevy::{prelude::*, sprite::collide_aabb::collide};
 
 #[derive(Component)]
@@ -16,7 +16,7 @@ pub fn goal_collision(
 
     if collide(
         player_position.value,
-        Vec2::new(16.0, 32.0),
+        Vec2::new(PLAYER_WIDTH, PLAYER_HEIGHT),
         goal_transform.translation,
         goal_sprite.custom_size.unwrap(),
     )
