@@ -73,7 +73,7 @@ pub fn bounce_player(
 
     for (bouncer_transform, bouncer_sprite, bouncer) in bouncer_query.iter() {
         let collision = collide(
-            player_position.value,
+            player_position.value.extend(1.0),
             Vec2::new(PLAYER_WIDTH, PLAYER_HEIGHT),
             bouncer_transform.translation,
             bouncer_sprite.custom_size.unwrap(),

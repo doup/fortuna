@@ -167,7 +167,7 @@ impl Player {
 
 #[derive(Component)]
 pub struct Position {
-    pub value: Vec3,
+    pub value: Vec2,
 }
 
 #[derive(Component)]
@@ -465,7 +465,7 @@ fn setup_entities(
                 buffer_jump_time: None,
             })
             .insert(Position {
-                value: transform.translation.clone(),
+                value: transform.translation.truncate(),
             })
             .insert(Velocity { x: 0.0, y: 0.0 })
             .insert(GameStateEntity);

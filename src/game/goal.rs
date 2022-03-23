@@ -15,7 +15,7 @@ pub fn goal_collision(
     let (goal_transform, goal_sprite) = goal_query.single();
 
     if collide(
-        player_position.value,
+        player_position.value.extend(1.0),
         Vec2::new(PLAYER_WIDTH, PLAYER_HEIGHT),
         goal_transform.translation,
         goal_sprite.custom_size.unwrap(),
