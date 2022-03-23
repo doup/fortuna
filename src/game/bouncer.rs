@@ -80,8 +80,8 @@ pub fn bounce_player(
         );
 
         let allow = match bouncer.allow {
-            BouncerType::SkinColorLight => stats.0.color == SkinColor::Light,
-            BouncerType::WealthRich => stats.0.wealth == Wealth::Rich,
+            BouncerType::SkinColorLight => stats.value.color == SkinColor::Light,
+            BouncerType::WealthRich => stats.value.wealth == Wealth::Rich,
         };
 
         if !allow && collision.is_some() {

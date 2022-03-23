@@ -24,8 +24,10 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(LdtkPlugin)
             .init_resource::<Animations>()
-            .insert_resource(PlayerPositionsRes(vec![]))
-            .insert_resource(StatsRes(Stats::new()))
+            .insert_resource(PlayerPositionsRes { value: vec![] })
+            .insert_resource(StatsRes {
+                value: Stats::new(),
+            })
             .insert_resource(LevelSelection::Index(0))
             .insert_resource(ObstaclesRes {
                 map: HashMap::new(),
@@ -92,7 +94,9 @@ pub struct ObstaclesRes {
 }
 
 #[derive(Debug)]
-pub struct PlayerPositionsRes(pub Vec<Transform>);
+pub struct PlayerPositionsRes {
+    pub value: Vec<Transform>,
+}
 
 #[derive(Debug)]
 struct Obstacle {
@@ -274,7 +278,7 @@ fn setup_game(
                         },
                     },
                     TextSection {
-                        value: stats.0.lifes.to_string(),
+                        value: stats.value.lifes.to_string(),
                         style: TextStyle {
                             font: ui_assets.font.clone(),
                             font_size: 40.0,
@@ -361,13 +365,13 @@ fn setup_entities(
 
     if player_entities.len() > 0 {
         // Prepare Player Positions Resource
-        player_positions.0 = player_entities
+        player_positions.value = player_entities
             .iter()
             .map(|(transform, _)| *transform.clone())
             .collect::<Vec<_>>();
 
         // Sort DESC by translation.y
-        player_positions.0.sort_by(|a_transform, b_transform| {
+        player_positions.value.sort_by(|a_transform, b_transform| {
             b_transform
                 .translation
                 .y
@@ -376,13 +380,13 @@ fn setup_entities(
         });
 
         // Create player and move to position
-        let pos = match stats.0.wealth {
+        let pos = match stats.value.wealth {
             Wealth::Rich => 0,
             Wealth::MiddleClass => 1,
             Wealth::Poor => 2,
         };
 
-        let &transform = player_positions.0.get(pos).unwrap();
+        let &transform = player_positions.value.get(pos).unwrap();
 
         // Animation
         animations.idle = animation_sheets.add(SpriteSheetAnimation::from_range(
@@ -460,7 +464,7 @@ fn setup_entities(
                 depressed_until: 0.0,
                 blink_until: 0.0,
                 last_ground_time: None,
-                lifes: stats.0.lifes,
+                lifes: stats.value.lifes,
                 bounce_force: None,
                 buffer_jump_time: None,
             })
@@ -536,7 +540,7 @@ fn player_color(
 ) {
     // let mut sprite = player_query.single_mut();
 
-    // sprite.color = match stats.0.color {
+    // sprite.color = match stats.value.color {
     //     SkinColor::Light => Color::hex("b8ddf5").unwrap(),
     //     SkinColor::Medium => Color::hex("3f789d").unwrap(),
     //     SkinColor::Dark => Color::hex("103954").unwrap(),
@@ -573,15 +577,15 @@ fn handle_input(
     let jump_force;
 
     if player.depressed_until > time.seconds_since_startup() {
-        top_speed = stats.0.top_speed_depressed;
-        top_speed_rate = stats.0.top_speed_rate_depressed;
-        stop_rate = stats.0.stop_rate_depressed;
-        jump_force = stats.0.jump_force_depressed;
+        top_speed = stats.value.top_speed_depressed;
+        top_speed_rate = stats.value.top_speed_rate_depressed;
+        stop_rate = stats.value.stop_rate_depressed;
+        jump_force = stats.value.jump_force_depressed;
     } else {
-        top_speed = stats.0.top_speed;
-        top_speed_rate = stats.0.top_speed_rate;
-        stop_rate = stats.0.stop_rate;
-        jump_force = stats.0.jump_force;
+        top_speed = stats.value.top_speed;
+        top_speed_rate = stats.value.top_speed_rate;
+        stop_rate = stats.value.stop_rate;
+        jump_force = stats.value.jump_force;
     }
 
     if let Some(last_ground_time) = player.last_ground_time {
@@ -716,7 +720,7 @@ fn player_movement(
         let vertical_obstacles = get_obstacle_list(
             get_tile_list(get_tile_space_bbox(&vertical_bbox)),
             &obstacles.map,
-            is_moving_up && stats.0.can_skip_one_way_platforms,
+            is_moving_up && stats.value.can_skip_one_way_platforms,
         );
 
         let nearest_obstacle_y = if is_moving_up {
@@ -783,10 +787,13 @@ fn player_animation(
 
     if is_jumping {
         // Map velocity.y to animation frame
-        let force_range = stats.0.jump_force * 2.0;
+        let force_range = stats.value.jump_force * 2.0;
         let total_frames = animations.jump.len() as f32;
-        let velocity = velocity.y.max(-stats.0.jump_force).min(stats.0.jump_force);
-        let frame = (force_range - (velocity + stats.0.jump_force)) / force_range;
+        let velocity = velocity
+            .y
+            .max(-stats.value.jump_force)
+            .min(stats.value.jump_force);
+        let frame = (force_range - (velocity + stats.value.jump_force)) / force_range;
         let frame = (frame * total_frames).min(total_frames - 1.0) as usize;
 
         *animation = animations.jump[frame].clone();
@@ -802,11 +809,11 @@ fn player_animation(
 fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Query<&mut Player>) {
     let mut player = players.single_mut();
 
-    let can_get_depressed = stats.0.is_depressive
+    let can_get_depressed = stats.value.is_depressive
         && (player.depressed_until + MIN_TIME_BETWEEN_DEPRE) < time.seconds_since_startup();
 
     if can_get_depressed {
-        if rand::thread_rng().gen_range(0.0..1.0) < stats.0.depre_chance {
+        if rand::thread_rng().gen_range(0.0..1.0) < stats.value.depre_chance {
             player.depressed_until = time.seconds_since_startup()
                 + rand::thread_rng().gen_range(MIN_DEPRE_DURATION..MAX_DEPRE_DURATION);
         }

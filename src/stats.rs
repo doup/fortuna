@@ -114,7 +114,9 @@ impl Distribution<Intelligence> for Standard {
     }
 }
 
-pub struct StatsRes(pub Stats);
+pub struct StatsRes {
+    pub value: Stats,
+}
 
 #[derive(Debug)]
 pub struct Stats {

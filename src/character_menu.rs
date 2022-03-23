@@ -84,7 +84,7 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                 .insert(CharacterMenuStateEntity)
                 .insert(BadgesNode)
                 .with_children(|parent| {
-                    add_badges(parent, &stats.0, &ui_assets);
+                    add_badges(parent, &stats.value, &ui_assets);
                 });
 
             parent
@@ -113,7 +113,7 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                                     vertical: VerticalAlign::Center,
                                 },
                                 sections: vec![TextSection {
-                                    value: stats.0.get_description(),
+                                    value: stats.value.get_description(),
                                     style: TextStyle {
                                         font: ui_assets.font.clone(),
                                         font_size: 40.0,
@@ -345,33 +345,33 @@ fn handle_reborn_button(
 ) {
     for interaction in interaction_query.iter() {
         if *interaction == Interaction::Clicked {
-            stats.0 = Stats::new();
+            stats.value = Stats::new();
 
             let mut stats_desc = stats_desc_query.single_mut();
-            stats_desc.sections[0].value = stats.0.get_description();
+            stats_desc.sections[0].value = stats.value.get_description();
 
             // Re-create badges
             let badges_node = badges_query.single();
             commands.entity(badges_node).despawn_descendants();
             commands
                 .entity(badges_node)
-                .with_children(|parent| add_badges(parent, &stats.0, &ui_assets));
+                .with_children(|parent| add_badges(parent, &stats.value, &ui_assets));
 
             // Move player
-            let pos = match stats.0.wealth {
+            let pos = match stats.value.wealth {
                 Wealth::Rich => 0,
                 Wealth::MiddleClass => 1,
                 Wealth::Poor => 2,
             };
 
-            let &position_transform = player_positions.0.get(pos).unwrap();
+            let &position_transform = player_positions.value.get(pos).unwrap();
             let mut player_position = player_query.single_mut();
 
             player_position.value = position_transform.translation.truncate();
 
             // Update lifes
             let mut lifes_text = lifes_query.single_mut();
-            lifes_text.sections[1].value = stats.0.lifes.to_string();
+            lifes_text.sections[1].value = stats.value.lifes.to_string();
         }
     }
 }
