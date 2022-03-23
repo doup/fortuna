@@ -535,8 +535,8 @@ fn setup_entities(
 }
 
 fn player_color(
-    stats: Res<StatsRes>,
-    mut player_query: Query<&mut TextureAtlasSprite, With<Player>>,
+    _stats: Res<StatsRes>,
+    mut _player_query: Query<&mut TextureAtlasSprite, With<Player>>,
 ) {
     // let mut sprite = player_query.single_mut();
 

@@ -63,13 +63,10 @@ pub fn get_bouncer_from_entity_instance(entity: &EntityInstance) -> Bouncer {
 pub fn bounce_player(
     stats: Res<StatsRes>,
     time: Res<Time>,
-    mut player_query: Query<
-        (&mut Position, &mut Player, &TextureAtlasSprite),
-        (With<Player>, Without<Bouncer>),
-    >,
+    mut player_query: Query<(&mut Position, &mut Player), (With<Player>, Without<Bouncer>)>,
     bouncer_query: Query<(&Transform, &Sprite, &Bouncer), (With<Bouncer>, Without<Player>)>,
 ) {
-    let (mut player_position, mut player, player_sprite) = player_query.single_mut();
+    let (mut player_position, mut player) = player_query.single_mut();
 
     for (bouncer_transform, bouncer_sprite, bouncer) in bouncer_query.iter() {
         let collision = collide(
