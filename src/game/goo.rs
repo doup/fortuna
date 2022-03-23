@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::GameState;
 
 use super::{
-    get_first_obstacle_pos_downward, to_tile_space, ObstaclesRes, Player, Point, Position,
-    PLAYER_BLINK_DURATION, TILE_SIZE,
+    camera::GameCamera, get_first_obstacle_pos_downward, to_tile_space, ObstaclesRes, Player,
+    Point, Position, PLAYER_BLINK_DURATION, TILE_SIZE,
 };
 
 const GOO_INITIAL_POS: f32 = -50.0;
@@ -31,17 +31,17 @@ impl Goo {
 
 pub fn goo_movement(
     time: Res<Time>,
-    players: Query<&Position, (With<Player>, Without<Goo>)>,
+    cameras: Query<&Transform, (With<GameCamera>, Without<Goo>)>,
     mut goo_query: Query<(&mut Goo, &mut Transform, &Sprite)>,
 ) {
-    let player_position = players.single();
+    let camera_position = cameras.single();
     let (mut goo, mut transform, sprite) = goo_query.single_mut();
 
     goo.y = GOO_INITIAL_POS - goo.regress
         + (time.seconds_since_startup() - goo.start_time) as f32 * GOO_SPEED
         + ((time.seconds_since_startup() * 2.0).sin() as f32) * GOO_SIN_AMPLITUDE;
 
-    transform.translation.x = player_position.value.x;
+    transform.translation.x = camera_position.translation.x;
     transform.translation.y = goo.y - sprite.custom_size.unwrap().y / 2.0;
     transform.translation.z = 500.0;
 }
