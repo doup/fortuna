@@ -15,6 +15,7 @@ use crate::{
         SkinColor, Stats, StatsRes, Wealth, JUMP_HEIGHT_DEPRESSED_PX, MAX_DEPRE_DURATION,
         MAX_DEPRE_DURATION, MIN_DEPRE_DURATION, MIN_TIME_BETWEEN_DEPRE,
     },
+    utils::clean_state,
     GameState,
 };
 
@@ -62,7 +63,9 @@ impl Plugin for GamePlugin {
                     .with_system(blink_player)
                     .with_system(bouncer::bounce_player),
             )
-            .add_system_set(SystemSet::on_exit(GameState::Game).with_system(clean_game));
+            .add_system_set(
+                SystemSet::on_exit(GameState::Game).with_system(clean_state::<GameStateEntity>),
+            );
     }
 }
 
@@ -828,12 +831,6 @@ fn blink_player(time: Res<Time>, mut player_query: Query<(&Player, &mut Visibili
         visibility.is_visible = (time_seconds * 10.0) as i32 % 2 == 0;
     } else {
         visibility.is_visible = true;
-    }
-}
-
-fn clean_game(mut commands: Commands, entities: Query<Entity, With<GameStateEntity>>) {
-    for entity in entities.iter() {
-        commands.entity(entity).despawn_recursive();
     }
 }
 

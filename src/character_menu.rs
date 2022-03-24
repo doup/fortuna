@@ -2,6 +2,7 @@ use crate::game::{LifesText, Player, PlayerPositionsRes, Position};
 use crate::loading::UIAssets;
 use crate::stats::{Intelligence, SkinColor, Stats, StatsRes, Strength, Wealth};
 use crate::ui::{handle_ui_buttons, NORMAL_BUTTON};
+use crate::utils::clean_state;
 use crate::GameState;
 use bevy::prelude::*;
 
@@ -19,7 +20,8 @@ impl Plugin for CharacterMenuPlugin {
                 .with_system(handle_reborn_button),
         )
         .add_system_set(
-            SystemSet::on_exit(GameState::CharacterMenu).with_system(clean_character_menu),
+            SystemSet::on_exit(GameState::CharacterMenu)
+                .with_system(clean_state::<CharacterMenuStateEntity>),
         );
     }
 }
@@ -251,15 +253,6 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                         });
                 });
         });
-}
-
-fn clean_character_menu(
-    mut commands: Commands,
-    entities: Query<Entity, With<CharacterMenuStateEntity>>,
-) {
-    for entity in entities.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
 }
 
 fn add_badges(parent: &mut ChildBuilder, stats: &Stats, ui_assets: &UIAssets) {

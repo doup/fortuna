@@ -1,4 +1,4 @@
-use crate::{loading::UIAssets, ui::NORMAL_BUTTON, GameState};
+use crate::{loading::UIAssets, ui::NORMAL_BUTTON, utils::clean_state, GameState};
 use bevy::prelude::*;
 
 pub struct LoseMenuPlugin;
@@ -9,7 +9,10 @@ impl Plugin for LoseMenuPlugin {
             .add_system_set(
                 SystemSet::on_update(GameState::LoseMenu).with_system(handle_restart_button),
             )
-            .add_system_set(SystemSet::on_exit(GameState::LoseMenu).with_system(clean_score));
+            .add_system_set(
+                SystemSet::on_exit(GameState::LoseMenu)
+                    .with_system(clean_state::<LoseMenuStateEntity>),
+            );
     }
 }
 
@@ -107,11 +110,5 @@ fn handle_restart_button(
         if *interaction == Interaction::Clicked {
             app_state.set(GameState::Game).unwrap();
         }
-    }
-}
-
-fn clean_score(mut commands: Commands, entities: Query<Entity, With<LoseMenuStateEntity>>) {
-    for entity in entities.iter() {
-        commands.entity(entity).despawn_recursive();
     }
 }

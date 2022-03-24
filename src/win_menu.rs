@@ -1,5 +1,6 @@
 use crate::loading::UIAssets;
 use crate::ui::{handle_ui_buttons, NORMAL_BUTTON};
+use crate::utils::clean_state;
 use crate::GameState;
 use bevy::prelude::*;
 
@@ -13,7 +14,10 @@ impl Plugin for WinPlugin {
                     .with_system(handle_ui_buttons)
                     .with_system(handle_play_again_button),
             )
-            .add_system_set(SystemSet::on_exit(GameState::WinMenu).with_system(clean_win));
+            .add_system_set(
+                SystemSet::on_exit(GameState::WinMenu)
+                    .with_system(clean_state::<WinMenuStateEntity>),
+            );
     }
 }
 
@@ -101,12 +105,6 @@ fn setup_win(mut commands: Commands, ui_assets: Res<UIAssets>) {
                     });
                 });
         });
-}
-
-fn clean_win(mut commands: Commands, entities: Query<Entity, With<WinMenuStateEntity>>) {
-    for entity in entities.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
 }
 
 fn handle_play_again_button(

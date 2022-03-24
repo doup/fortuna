@@ -5,6 +5,7 @@ mod lose_menu;
 mod main_menu;
 mod stats;
 mod ui;
+mod utils;
 mod win_menu;
 
 use bevy::prelude::*;
