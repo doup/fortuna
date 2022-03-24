@@ -50,16 +50,14 @@ fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
         })
         .insert(MainMenuStateEntity)
         .with_children(|parent| {
-            parent
-                .spawn_bundle(ImageBundle {
-                    style: Style {
-                        size: Size::new(Val::Auto, Val::Px(120.0)),
-                        ..Default::default()
-                    },
-                    image: ui_assets.logo.clone().into(),
+            parent.spawn_bundle(ImageBundle {
+                style: Style {
+                    size: Size::new(Val::Auto, Val::Px(120.0)),
                     ..Default::default()
-                })
-                .insert(MainMenuStateEntity);
+                },
+                image: ui_assets.logo.clone().into(),
+                ..Default::default()
+            });
 
             parent
                 .spawn_bundle(ButtonBundle {
@@ -79,29 +77,26 @@ fn setup_main_menu(mut commands: Commands, ui_assets: Res<UIAssets>) {
                     ..Default::default()
                 })
                 .insert(PlayButton)
-                .insert(MainMenuStateEntity)
                 .with_children(|parent| {
-                    parent
-                        .spawn_bundle(TextBundle {
-                            text: Text::with_section(
-                                "Play",
-                                TextStyle {
-                                    font: ui_assets.font.clone(),
-                                    font_size: 40.0,
-                                    color: Color::rgb(0.9, 0.9, 0.9),
-                                },
-                                Default::default(),
-                            ),
-                            ..Default::default()
-                        })
-                        .insert(MainMenuStateEntity);
+                    parent.spawn_bundle(TextBundle {
+                        text: Text::with_section(
+                            "Play",
+                            TextStyle {
+                                font: ui_assets.font.clone(),
+                                font_size: 40.0,
+                                color: Color::rgb(0.9, 0.9, 0.9),
+                            },
+                            Default::default(),
+                        ),
+                        ..Default::default()
+                    });
                 });
         });
 }
 
 fn clean_main_menu(mut commands: Commands, entities: Query<Entity, With<MainMenuStateEntity>>) {
     for entity in entities.iter() {
-        commands.entity(entity).despawn();
+        commands.entity(entity).despawn_recursive();
     }
 }
 

@@ -59,16 +59,14 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
         })
         .insert(CharacterMenuStateEntity)
         .with_children(|parent| {
-            parent
-                .spawn_bundle(ImageBundle {
-                    style: Style {
-                        size: Size::new(Val::Auto, Val::Px(100.0)),
-                        ..Default::default()
-                    },
-                    image: ui_assets.character.clone().into(),
+            parent.spawn_bundle(ImageBundle {
+                style: Style {
+                    size: Size::new(Val::Auto, Val::Px(100.0)),
                     ..Default::default()
-                })
-                .insert(CharacterMenuStateEntity);
+                },
+                image: ui_assets.character.clone().into(),
+                ..Default::default()
+            });
 
             parent
                 .spawn_bundle(NodeBundle {
@@ -81,7 +79,6 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                     },
                     ..Default::default()
                 })
-                .insert(CharacterMenuStateEntity)
                 .insert(BadgesNode)
                 .with_children(|parent| {
                     add_badges(parent, &stats.value, &ui_assets);
@@ -98,7 +95,6 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                     },
                     ..Default::default()
                 })
-                .insert(CharacterMenuStateEntity)
                 .with_children(|parent| {
                     parent
                         .spawn_bundle(TextBundle {
@@ -123,72 +119,65 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                             },
                             ..Default::default()
                         })
-                        .insert(CharacterMenuStateEntity)
                         .insert(StatsDescription);
 
-                    parent
-                        .spawn_bundle(TextBundle {
-                            style: Style {
-                                max_size: Size::new(Val::Px(600.0), Val::Auto),
-                                margin: Rect {
-                                    top: Val::Px(15.0),
-                                    right: Val::Undefined,
-                                    bottom: Val::Undefined,
-                                    left: Val::Undefined,
-                                },
-                                ..Default::default()
-                            },
-                            // Use `Text` directly
-                            text: Text {
-                                alignment: TextAlignment {
-                                    horizontal: HorizontalAlign::Center,
-                                    vertical: VerticalAlign::Center,
-                                },
-                                sections: vec![TextSection {
-                                    value: String::from("Jump hard and reach to the top!"),
-                                    style: TextStyle {
-                                        font: ui_assets.font.clone(),
-                                        font_size: 40.0,
-                                        color: Color::BLACK,
-                                    },
-                                }],
+                    parent.spawn_bundle(TextBundle {
+                        style: Style {
+                            max_size: Size::new(Val::Px(600.0), Val::Auto),
+                            margin: Rect {
+                                top: Val::Px(15.0),
+                                right: Val::Undefined,
+                                bottom: Val::Undefined,
+                                left: Val::Undefined,
                             },
                             ..Default::default()
-                        })
-                        .insert(CharacterMenuStateEntity);
+                        },
+                        // Use `Text` directly
+                        text: Text {
+                            alignment: TextAlignment {
+                                horizontal: HorizontalAlign::Center,
+                                vertical: VerticalAlign::Center,
+                            },
+                            sections: vec![TextSection {
+                                value: String::from("Jump hard and reach to the top!"),
+                                style: TextStyle {
+                                    font: ui_assets.font.clone(),
+                                    font_size: 40.0,
+                                    color: Color::BLACK,
+                                },
+                            }],
+                        },
+                        ..Default::default()
+                    });
 
-                    parent
-                        .spawn_bundle(TextBundle {
-                            style: Style {
-                                max_size: Size::new(Val::Px(600.0), Val::Auto),
-                                margin: Rect {
-                                    top: Val::Px(10.0),
-                                    right: Val::Undefined,
-                                    bottom: Val::Undefined,
-                                    left: Val::Undefined,
-                                },
-                                ..Default::default()
-                            },
-                            // Use `Text` directly
-                            text: Text {
-                                alignment: TextAlignment {
-                                    horizontal: HorizontalAlign::Center,
-                                    vertical: VerticalAlign::Center,
-                                },
-                                sections: vec![TextSection {
-                                    value: String::from(
-                                        "Oh! And don't let the black goo catch you...",
-                                    ),
-                                    style: TextStyle {
-                                        font: ui_assets.font.clone(),
-                                        font_size: 28.0,
-                                        color: Color::BLACK,
-                                    },
-                                }],
+                    parent.spawn_bundle(TextBundle {
+                        style: Style {
+                            max_size: Size::new(Val::Px(600.0), Val::Auto),
+                            margin: Rect {
+                                top: Val::Px(10.0),
+                                right: Val::Undefined,
+                                bottom: Val::Undefined,
+                                left: Val::Undefined,
                             },
                             ..Default::default()
-                        })
-                        .insert(CharacterMenuStateEntity);
+                        },
+                        // Use `Text` directly
+                        text: Text {
+                            alignment: TextAlignment {
+                                horizontal: HorizontalAlign::Center,
+                                vertical: VerticalAlign::Center,
+                            },
+                            sections: vec![TextSection {
+                                value: String::from("Oh! And don't let the black goo catch you..."),
+                                style: TextStyle {
+                                    font: ui_assets.font.clone(),
+                                    font_size: 28.0,
+                                    color: Color::BLACK,
+                                },
+                            }],
+                        },
+                        ..Default::default()
+                    });
                 });
 
             parent
@@ -204,7 +193,6 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                     color: Color::WHITE.into(),
                     ..Default::default()
                 })
-                .insert(CharacterMenuStateEntity)
                 .with_children(|parent| {
                     parent
                         .spawn_bundle(ButtonBundle {
@@ -219,22 +207,19 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                             ..Default::default()
                         })
                         .insert(ReBornButton)
-                        .insert(CharacterMenuStateEntity)
                         .with_children(|parent| {
-                            parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Re-Born",
-                                        TextStyle {
-                                            font: ui_assets.font.clone(),
-                                            font_size: 40.0,
-                                            color: Color::rgb(0.9, 0.9, 0.9),
-                                        },
-                                        Default::default(),
-                                    ),
-                                    ..Default::default()
-                                })
-                                .insert(CharacterMenuStateEntity);
+                            parent.spawn_bundle(TextBundle {
+                                text: Text::with_section(
+                                    "Re-Born",
+                                    TextStyle {
+                                        font: ui_assets.font.clone(),
+                                        font_size: 40.0,
+                                        color: Color::rgb(0.9, 0.9, 0.9),
+                                    },
+                                    Default::default(),
+                                ),
+                                ..Default::default()
+                            });
                         });
 
                     parent
@@ -250,22 +235,19 @@ fn setup_character_menu(stats: Res<StatsRes>, mut commands: Commands, ui_assets:
                             ..Default::default()
                         })
                         .insert(StartButton)
-                        .insert(CharacterMenuStateEntity)
                         .with_children(|parent| {
-                            parent
-                                .spawn_bundle(TextBundle {
-                                    text: Text::with_section(
-                                        "Start",
-                                        TextStyle {
-                                            font: ui_assets.font.clone(),
-                                            font_size: 40.0,
-                                            color: Color::rgb(0.9, 0.9, 0.9),
-                                        },
-                                        Default::default(),
-                                    ),
-                                    ..Default::default()
-                                })
-                                .insert(CharacterMenuStateEntity);
+                            parent.spawn_bundle(TextBundle {
+                                text: Text::with_section(
+                                    "Start",
+                                    TextStyle {
+                                        font: ui_assets.font.clone(),
+                                        font_size: 40.0,
+                                        color: Color::rgb(0.9, 0.9, 0.9),
+                                    },
+                                    Default::default(),
+                                ),
+                                ..Default::default()
+                            });
                         });
                 });
         });
@@ -276,7 +258,7 @@ fn clean_character_menu(
     entities: Query<Entity, With<CharacterMenuStateEntity>>,
 ) {
     for entity in entities.iter() {
-        commands.entity(entity).despawn();
+        commands.entity(entity).despawn_recursive();
     }
 }
 
@@ -307,16 +289,14 @@ fn add_badges(parent: &mut ChildBuilder, stats: &Stats, ui_assets: &UIAssets) {
     }
 
     for image in badges {
-        parent
-            .spawn_bundle(ImageBundle {
-                style: Style {
-                    size: Size::new(Val::Px(50.0), Val::Px(50.0)),
-                    ..Default::default()
-                },
-                image: image.into(),
+        parent.spawn_bundle(ImageBundle {
+            style: Style {
+                size: Size::new(Val::Px(50.0), Val::Px(50.0)),
                 ..Default::default()
-            })
-            .insert(CharacterMenuStateEntity);
+            },
+            image: image.into(),
+            ..Default::default()
+        });
     }
 }
 

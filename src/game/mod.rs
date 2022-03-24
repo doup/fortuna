@@ -833,7 +833,7 @@ fn blink_player(time: Res<Time>, mut player_query: Query<(&Player, &mut Visibili
 
 fn clean_game(mut commands: Commands, entities: Query<Entity, With<GameStateEntity>>) {
     for entity in entities.iter() {
-        commands.entity(entity).despawn();
+        commands.entity(entity).despawn_recursive();
     }
 }
 

@@ -45,30 +45,28 @@ fn setup_win(mut commands: Commands, ui_assets: Res<UIAssets>) {
         })
         .insert(WinMenuStateEntity)
         .with_children(|parent| {
-            parent
-                .spawn_bundle(TextBundle {
-                    style: Style {
-                        max_size: Size::new(Val::Px(600.0), Val::Auto),
-                        ..Default::default()
-                    },
-                    // Use `Text` directly
-                    text: Text {
-                        alignment: TextAlignment {
-                            horizontal: HorizontalAlign::Center,
-                            vertical: VerticalAlign::Center,
-                        },
-                        sections: vec![TextSection {
-                            value: String::from("You've reached the top!"),
-                            style: TextStyle {
-                                font: ui_assets.font.clone(),
-                                font_size: 40.0,
-                                color: Color::BLACK,
-                            },
-                        }],
-                    },
+            parent.spawn_bundle(TextBundle {
+                style: Style {
+                    max_size: Size::new(Val::Px(600.0), Val::Auto),
                     ..Default::default()
-                })
-                .insert(WinMenuStateEntity);
+                },
+                // Use `Text` directly
+                text: Text {
+                    alignment: TextAlignment {
+                        horizontal: HorizontalAlign::Center,
+                        vertical: VerticalAlign::Center,
+                    },
+                    sections: vec![TextSection {
+                        value: String::from("You've reached the top!"),
+                        style: TextStyle {
+                            font: ui_assets.font.clone(),
+                            font_size: 40.0,
+                            color: Color::BLACK,
+                        },
+                    }],
+                },
+                ..Default::default()
+            });
 
             parent
                 .spawn_bundle(ButtonBundle {
@@ -88,29 +86,26 @@ fn setup_win(mut commands: Commands, ui_assets: Res<UIAssets>) {
                     ..Default::default()
                 })
                 .insert(PlayAgainButton)
-                .insert(WinMenuStateEntity)
                 .with_children(|parent| {
-                    parent
-                        .spawn_bundle(TextBundle {
-                            text: Text::with_section(
-                                "Play Again",
-                                TextStyle {
-                                    font: ui_assets.font.clone(),
-                                    font_size: 40.0,
-                                    color: Color::rgb(0.9, 0.9, 0.9),
-                                },
-                                Default::default(),
-                            ),
-                            ..Default::default()
-                        })
-                        .insert(WinMenuStateEntity);
+                    parent.spawn_bundle(TextBundle {
+                        text: Text::with_section(
+                            "Play Again",
+                            TextStyle {
+                                font: ui_assets.font.clone(),
+                                font_size: 40.0,
+                                color: Color::rgb(0.9, 0.9, 0.9),
+                            },
+                            Default::default(),
+                        ),
+                        ..Default::default()
+                    });
                 });
         });
 }
 
 fn clean_win(mut commands: Commands, entities: Query<Entity, With<WinMenuStateEntity>>) {
     for entity in entities.iter() {
-        commands.entity(entity).despawn();
+        commands.entity(entity).despawn_recursive();
     }
 }
 

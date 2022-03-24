@@ -41,30 +41,28 @@ fn setup_score(mut commands: Commands, ui_assets: Res<UIAssets>) {
         })
         .insert(LoseMenuStateEntity)
         .with_children(|parent| {
-            parent
-                .spawn_bundle(TextBundle {
-                    style: Style {
-                        max_size: Size::new(Val::Px(600.0), Val::Auto),
-                        ..Default::default()
-                    },
-                    // Use `Text` directly
-                    text: Text {
-                        alignment: TextAlignment {
-                            horizontal: HorizontalAlign::Center,
-                            vertical: VerticalAlign::Center,
-                        },
-                        sections: vec![TextSection {
-                            value: String::from("You lose, jump harder next time."),
-                            style: TextStyle {
-                                font: ui_assets.font.clone(),
-                                font_size: 40.0,
-                                color: Color::BLACK,
-                            },
-                        }],
-                    },
+            parent.spawn_bundle(TextBundle {
+                style: Style {
+                    max_size: Size::new(Val::Px(600.0), Val::Auto),
                     ..Default::default()
-                })
-                .insert(LoseMenuStateEntity);
+                },
+                // Use `Text` directly
+                text: Text {
+                    alignment: TextAlignment {
+                        horizontal: HorizontalAlign::Center,
+                        vertical: VerticalAlign::Center,
+                    },
+                    sections: vec![TextSection {
+                        value: String::from("You lose, jump harder next time."),
+                        style: TextStyle {
+                            font: ui_assets.font.clone(),
+                            font_size: 40.0,
+                            color: Color::BLACK,
+                        },
+                    }],
+                },
+                ..Default::default()
+            });
 
             parent
                 .spawn_bundle(ButtonBundle {
@@ -84,22 +82,19 @@ fn setup_score(mut commands: Commands, ui_assets: Res<UIAssets>) {
                     ..Default::default()
                 })
                 .insert(RetryButton)
-                .insert(LoseMenuStateEntity)
                 .with_children(|parent| {
-                    parent
-                        .spawn_bundle(TextBundle {
-                            text: Text::with_section(
-                                "Retry",
-                                TextStyle {
-                                    font: ui_assets.font.clone(),
-                                    font_size: 40.0,
-                                    color: Color::rgb(0.9, 0.9, 0.9),
-                                },
-                                Default::default(),
-                            ),
-                            ..Default::default()
-                        })
-                        .insert(LoseMenuStateEntity);
+                    parent.spawn_bundle(TextBundle {
+                        text: Text::with_section(
+                            "Retry",
+                            TextStyle {
+                                font: ui_assets.font.clone(),
+                                font_size: 40.0,
+                                color: Color::rgb(0.9, 0.9, 0.9),
+                            },
+                            Default::default(),
+                        ),
+                        ..Default::default()
+                    });
                 });
         });
 }
@@ -117,6 +112,6 @@ fn handle_restart_button(
 
 fn clean_score(mut commands: Commands, entities: Query<Entity, With<LoseMenuStateEntity>>) {
     for entity in entities.iter() {
-        commands.entity(entity).despawn();
+        commands.entity(entity).despawn_recursive();
     }
 }
