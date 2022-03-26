@@ -14,46 +14,30 @@ pub struct Point<T: Copy>(pub T, pub T);
 
 #[derive(Debug, PartialEq)]
 pub struct BBox<T: Copy> {
-    min: Point<T>,
-    max: Point<T>,
+    left: T,
+    bottom: T,
+    right: T,
+    top: T,
 }
 
 impl<T: Copy> BBox<T> {
-    pub fn new(min: (T, T), max: (T, T)) -> BBox<T> {
+    pub fn new(left: T, bottom: T, right: T, top: T) -> BBox<T> {
         BBox {
-            min: Point(min.0, min.1),
-            max: Point(max.0, max.1),
+            left,
+            bottom,
+            right,
+            top,
         }
-    }
-
-    fn left(&self) -> T {
-        self.min.0
-    }
-
-    fn right(&self) -> T {
-        self.max.0
-    }
-
-    fn top(&self) -> T {
-        self.max.1
-    }
-
-    fn bottom(&self) -> T {
-        self.min.1
     }
 }
 
 /// Map screen-space bbox to tile-space bbox
 pub fn get_tile_space_bbox(bbox: &BBox<f32>) -> BBox<i32> {
     BBox::new(
-        (
-            (bbox.min.0 / TILE_SIZE).floor() as i32,
-            (bbox.min.1 / TILE_SIZE).floor() as i32,
-        ),
-        (
-            (bbox.max.0 / TILE_SIZE).floor() as i32,
-            (bbox.max.1 / TILE_SIZE).floor() as i32,
-        ),
+        (bbox.left / TILE_SIZE).floor() as i32,
+        (bbox.bottom / TILE_SIZE).floor() as i32,
+        (bbox.right / TILE_SIZE).floor() as i32,
+        (bbox.top / TILE_SIZE).floor() as i32,
     )
 }
 
@@ -61,8 +45,8 @@ pub fn get_tile_space_bbox(bbox: &BBox<f32>) -> BBox<i32> {
 pub fn get_tile_list(bbox: BBox<i32>) -> Vec<Point<i32>> {
     let mut tiles = Vec::new();
 
-    for y in bbox.bottom()..(bbox.top() + 1) {
-        for x in bbox.left()..(bbox.right() + 1) {
+    for y in bbox.bottom..(bbox.top + 1) {
+        for x in bbox.left..(bbox.right + 1) {
             tiles.push(Point(x, y));
         }
     }
@@ -119,30 +103,30 @@ mod test {
     #[test]
     fn test_get_tile_space_bbox() {
         assert_eq!(
-            get_tile_space_bbox(&BBox::new((1.0, 1.0), (24.0, 38.0))),
-            BBox::new((0, 0), (1, 2))
+            get_tile_space_bbox(&BBox::new(1.0, 1.0, 24.0, 38.0)),
+            BBox::new(0, 0, 1, 2)
         );
 
         assert_eq!(
-            get_tile_space_bbox(&BBox::new((0.0, 0.0), (16.0, 16.0))),
-            BBox::new((0, 0), (1, 1))
+            get_tile_space_bbox(&BBox::new(0.0, 0.0, 16.0, 16.0)),
+            BBox::new(0, 0, 1, 1)
         );
 
         assert_eq!(
-            get_tile_space_bbox(&BBox::new((0.0, 0.0), (15.0, 15.0))),
-            BBox::new((0, 0), (0, 0))
+            get_tile_space_bbox(&BBox::new(0.0, 0.0, 15.0, 15.0)),
+            BBox::new(0, 0, 0, 0)
         );
 
         assert_eq!(
-            get_tile_space_bbox(&BBox::new((0.0, 0.0), (70.0, 8.0))),
-            BBox::new((0, 0), (4, 0))
+            get_tile_space_bbox(&BBox::new(0.0, 0.0, 70.0, 8.0)),
+            BBox::new(0, 0, 4, 0)
         );
     }
 
     #[test]
     fn test_get_tile_list() {
         assert_eq!(
-            get_tile_list(BBox::new((0, 0), (1, 2))),
+            get_tile_list(BBox::new(0, 0, 1, 2)),
             vec![
                 Point(0, 0),
                 Point(1, 0),
@@ -153,7 +137,7 @@ mod test {
             ]
         );
 
-        assert_eq!(get_tile_list(BBox::new((0, 0), (0, 0))), vec![Point(0, 0)]);
+        assert_eq!(get_tile_list(BBox::new(0, 0, 0, 0)), vec![Point(0, 0)]);
     }
 
     #[test]
@@ -176,13 +160,13 @@ mod test {
             },
         );
 
-        let list = get_obstacle_list(get_tile_list(BBox::new((0, 0), (1, 2))), &obstacles, false);
+        let list = get_obstacle_list(get_tile_list(BBox::new(0, 0, 1, 2)), &obstacles, false);
 
         assert_eq!(list.len(), 2);
         assert_eq!(list[0].pos, Point(0, 1));
         assert_eq!(list[1].pos, Point(1, 1));
 
-        let list = get_obstacle_list(get_tile_list(BBox::new((0, 0), (1, 2))), &obstacles, true);
+        let list = get_obstacle_list(get_tile_list(BBox::new(0, 0, 1, 2)), &obstacles, true);
 
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].pos, Point(0, 1));

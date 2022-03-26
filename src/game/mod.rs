@@ -632,11 +632,11 @@ fn player_movement(
         let horizontal_bbox = if is_moving_right {
             let left = position.value.x + PLAYER_WIDTH_HALF;
             let right = left + velocity.x.abs() * time_delta;
-            BBox::new((left, bottom), (right, top))
+            BBox::new(left, bottom, right, top)
         } else {
             let right = position.value.x - PLAYER_WIDTH_HALF;
             let left = right - velocity.x.abs() * time_delta;
-            BBox::new((left, bottom), (right, top))
+            BBox::new(left, bottom, right, top)
         };
 
         let horizontal_obstacles = get_obstacle_list(
@@ -674,11 +674,11 @@ fn player_movement(
         let vertical_bbox = if is_moving_up {
             let bottom = position.value.y + PLAYER_HEIGHT_HALF;
             let top = bottom + velocity.y.abs() * time_delta;
-            BBox::new((left, bottom), (right, top))
+            BBox::new(left, bottom, right, top)
         } else {
             let top = position.value.y - PLAYER_HEIGHT_HALF;
             let bottom = top - velocity.y.abs() * time_delta;
-            BBox::new((left, bottom), (right, top))
+            BBox::new(left, bottom, right, top)
         };
 
         let vertical_obstacles = get_obstacle_list(
