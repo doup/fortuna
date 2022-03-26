@@ -794,8 +794,7 @@ fn player_animation(
         let total_frames = animations.jump.len() as f32;
         let velocity = velocity
             .y
-            .max(-stats.value.jump_force)
-            .min(stats.value.jump_force);
+            .clamp(-stats.value.jump_force, stats.value.jump_force);
         let frame = (force_range - (velocity + stats.value.jump_force)) / force_range;
         let frame = (frame * total_frames).min(total_frames - 1.0) as usize;
 
