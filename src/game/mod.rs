@@ -44,6 +44,9 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(LdtkPlugin)
+            .add_event::<JumpEvent>()
+            .add_event::<LandingEvent>()
+            .add_event::<CeilHitEvent>()
             .init_resource::<Animations>()
             .insert_resource(PlayerPositionsRes { value: vec![] })
             .insert_resource(StatsRes {
@@ -75,6 +78,13 @@ impl Plugin for GamePlugin {
                     .with_system(handle_input.label("input").after("player_color"))
                     .with_system(player_movement.label("movement").after("input"))
                     .with_system(player_animation.after("movement"))
+                    .with_system(add_jump_dust.after("movement"))
+                    .with_system(play_jump_sound.after("movement"))
+                    .with_system(add_landing_dust.after("movement"))
+                    .with_system(play_landing_sound.after("movement"))
+                    .with_system(add_ceil_hit_sprite.after("movement"))
+                    .with_system(play_ceil_hit_sound.after("movement"))
+                    .with_system(remove_vfx)
                     .with_system(camera::camera_movement.after("movement"))
                     .with_system(goo::goo_movement.label("goo_movement"))
                     .with_system(goo::goo_collision.after("goo_movement").after("movement"))
@@ -89,6 +99,18 @@ impl Plugin for GamePlugin {
     }
 }
 
+struct JumpEvent {
+    position: Vec2,
+    velocity: Vec2,
+}
+
+struct LandingEvent {
+    position: Vec2,
+}
+
+struct CeilHitEvent {
+    position: Vec2,
+}
 
 // RESOURCES
 #[derive(Default)]
@@ -96,6 +118,7 @@ struct Animations {
     idle: Handle<SpriteSheetAnimation>,
     run: Handle<SpriteSheetAnimation>,
     jump: Vec<Handle<SpriteSheetAnimation>>,
+    dust: Handle<SpriteSheetAnimation>,
 }
 
 pub struct ObstaclesRes {
@@ -137,6 +160,9 @@ impl Player {
         }
     }
 }
+
+#[derive(Component)]
+struct VFX;
 
 #[derive(Component)]
 pub struct Position {
@@ -368,6 +394,9 @@ fn setup_entities(
             Duration::from_millis(30),
         ));
 
+        animations.dust = animation_sheets
+            .add(SpriteSheetAnimation::from_range(0..=4, Duration::from_millis(100)).once());
+
         animations.jump = vec![
             animation_sheets.add(SpriteSheetAnimation::from_range(
                 25..=25,
@@ -530,10 +559,11 @@ fn handle_input(
     stats: Res<StatsRes>,
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
+    mut jump_event: EventWriter<JumpEvent>,
     mut app_state: ResMut<State<GameState>>,
-    mut player_query: Query<(&mut Velocity, &mut Player), With<Player>>,
+    mut player_query: Query<(&mut Velocity, &mut Player, &Position), With<Player>>,
 ) {
-    let (mut velocity, mut player) = player_query.single_mut();
+    let (mut velocity, mut player, position) = player_query.single_mut();
     let time_delta = time.delta_seconds();
     let top_speed;
     let top_speed_rate;
@@ -563,6 +593,11 @@ fn handle_input(
         if can_jump {
             velocity.y = jump_force;
             player.last_ground_time = None;
+
+            jump_event.send(JumpEvent {
+                position: position.value.clone(),
+                velocity: Vec2::new(velocity.x, velocity.y),
+            });
         }
 
         // Clear buffered jump time
@@ -614,6 +649,8 @@ fn player_movement(
     stats: Res<StatsRes>,
     time: Res<Time>,
     obstacles: Res<ObstaclesRes>,
+    mut landing_event: EventWriter<LandingEvent>,
+    mut ceil_hit_event: EventWriter<CeilHitEvent>,
     mut player_query: Query<(&mut Position, &mut Velocity, &mut Player), With<Player>>,
 ) {
     let (mut position, mut velocity, mut player) = player_query.single_mut();
@@ -704,10 +741,19 @@ fn player_movement(
                 position.value.y = nearest_obstacle_y;
 
                 if !is_moving_up {
+                    if player.last_ground_time.is_none() {
+                        landing_event.send(LandingEvent {
+                            position: position.value.clone(),
+                        });
+                    }
+
                     velocity.y = 0.0;
                     player.last_ground_time = Some(time.seconds_since_startup());
                 } else {
                     velocity.y = -velocity.y * 0.1;
+                    ceil_hit_event.send(CeilHitEvent {
+                        position: position.value.clone(),
+                    });
                 }
             } else {
                 position.value.y = pos_y;
@@ -766,6 +812,76 @@ fn player_animation(
         *animation = animations.run.clone();
     } else {
         *animation = animations.idle.clone();
+    }
+}
+
+fn remove_vfx(dust_query: Query<(Entity, Option<&Play>), With<VFX>>, mut commands: Commands) {
+    for (entity, maybe_play) in dust_query.iter() {
+        if maybe_play.is_none() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn add_jump_dust(
+    game_assets: Res<GameAssets>,
+    mut animations: ResMut<Animations>,
+    mut textures: ResMut<Assets<TextureAtlas>>,
+    mut jump_event: EventReader<JumpEvent>,
+    mut commands: Commands,
+) {
+    for ev in jump_event.iter() {
+        commands
+            .spawn_bundle(SpriteSheetBundle {
+                transform: Transform {
+                    translation: (ev.position + Vec2::new(0.0, -8.0)).extend(10.0),
+                    ..Default::default()
+                },
+                texture_atlas: textures.add(TextureAtlas::from_grid(
+                    game_assets.dust_anim.clone(),
+                    Vec2::new(16.0, 16.0),
+                    5,
+                    1,
+                )),
+                ..Default::default()
+            })
+            .insert(animations.dust.clone())
+            .insert(Play)
+            .insert(VFX);
+    }
+}
+
+fn play_jump_sound(
+    audio: Res<Audio>,
+    game_assets: Res<GameAssets>,
+    mut jump_event: EventReader<JumpEvent>,
+) {
+    for _ in jump_event.iter() {
+        audio.play(game_assets.jump_sound.clone());
+    }
+}
+
+fn add_landing_dust(mut landing_event: EventReader<LandingEvent>) {
+    for ev in landing_event.iter() {
+        // ev.
+    }
+}
+
+fn play_landing_sound(mut landing_event: EventReader<LandingEvent>) {
+    for ev in landing_event.iter() {
+        println!("Play landing sound");
+    }
+}
+
+fn add_ceil_hit_sprite(mut ceil_hit_event: EventReader<CeilHitEvent>) {
+    for ev in ceil_hit_event.iter() {
+        // ev.
+    }
+}
+
+fn play_ceil_hit_sound(mut ceil_hit_event: EventReader<CeilHitEvent>) {
+    for ev in ceil_hit_event.iter() {
+        println!("Play ceil-hit sound");
     }
 }
 

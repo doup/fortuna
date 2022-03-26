@@ -50,6 +50,10 @@ pub struct GameAssets {
     pub map: Handle<LdtkAsset>,
     #[asset(path = "player.png")]
     pub player_anim: Handle<Image>,
+    #[asset(path = "dust.png")]
+    pub dust_anim: Handle<Image>,
+    #[asset(path = "jump.ogg")]
+    pub jump_sound: Handle<AudioSource>,
 }
 
 fn hot_reload(_asset_server: Res<AssetServer>) {
