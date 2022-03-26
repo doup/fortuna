@@ -3,8 +3,9 @@ use bevy::prelude::*;
 use crate::GameState;
 
 use super::{
-    camera::GameCamera, get_first_obstacle_pos_downward, to_tile_space, ObstaclesRes, Player,
-    Point, Position, PLAYER_BLINK_DURATION, TILE_SIZE,
+    camera::GameCamera,
+    obstacles::{get_first_obstacle_pos_downward, to_tile_space, Point},
+    ObstaclesRes, Player, Position, PLAYER_BLINK_DURATION, TILE_SIZE,
 };
 
 const GOO_INITIAL_POS: f32 = -50.0;
@@ -64,7 +65,7 @@ pub fn goo_collision(
         } else {
             let first_down_obstacle_tile_pos = get_first_obstacle_pos_downward(
                 &obstacles.map,
-                to_tile_space(Point(player_position.value.x, player_position.value.y)),
+                to_tile_space(&player_position.value),
             )
             .unwrap();
 

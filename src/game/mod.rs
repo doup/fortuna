@@ -2,6 +2,7 @@ mod bouncer;
 mod camera;
 mod goal;
 mod goo;
+mod obstacles;
 
 use benimator::{Play, SpriteSheetAnimation};
 use bevy::prelude::*;
@@ -18,6 +19,25 @@ use crate::{
     utils::clean_state,
     GameState,
 };
+
+use self::obstacles::{
+    get_obstacle_list, get_tile_list, get_tile_space_bbox, BBox, Obstacle, Point,
+};
+
+// PLAYER CONSTANTS
+pub const TILE_SIZE: f32 = 16.0;
+const SKIN_SIZE: f32 = 2.0;
+pub const PLAYER_WIDTH: f32 = 16.0;
+pub const PLAYER_HEIGHT: f32 = 36.0;
+const PLAYER_SPRITE_HEIGHT: f32 = 48.0;
+const PLAYER_WIDTH_HALF: f32 = PLAYER_WIDTH / 2.0;
+const PLAYER_HEIGHT_HALF: f32 = PLAYER_HEIGHT / 2.0;
+const PLAYER_BLINK_DURATION: f64 = 1.5;
+
+// JUMP
+pub const GRAVITY: f32 = -1422.0;
+const COYOTE_TIME: f64 = 0.125; // seconds after falling from a platform that still can jump
+const JUMP_BUFFER_TIME: f64 = 0.1; // seconds before touching ground that jump will be valid
 
 pub struct GamePlugin;
 
@@ -69,20 +89,6 @@ impl Plugin for GamePlugin {
     }
 }
 
-// PLAYER CONSTANTS
-const TILE_SIZE: f32 = 16.0;
-const SKIN_SIZE: f32 = 2.0;
-pub const PLAYER_WIDTH: f32 = 16.0;
-pub const PLAYER_HEIGHT: f32 = 36.0;
-const PLAYER_SPRITE_HEIGHT: f32 = 48.0;
-const PLAYER_WIDTH_HALF: f32 = PLAYER_WIDTH / 2.0;
-const PLAYER_HEIGHT_HALF: f32 = PLAYER_HEIGHT / 2.0;
-const PLAYER_BLINK_DURATION: f64 = 1.5;
-
-// JUMP
-pub const GRAVITY: f32 = -1422.0;
-const COYOTE_TIME: f64 = 0.125; // seconds after falling from a platform that still can jump
-const JUMP_BUFFER_TIME: f64 = 0.1; // seconds before touching ground that jump will be valid
 
 // RESOURCES
 #[derive(Default)]
@@ -99,46 +105,6 @@ pub struct ObstaclesRes {
 #[derive(Debug)]
 pub struct PlayerPositionsRes {
     pub value: Vec<Transform>,
-}
-
-#[derive(Debug)]
-struct Obstacle {
-    pos: Point<i32>,
-    is_one_way: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Hash, Eq)]
-struct Point<T: Copy>(T, T);
-
-#[derive(Debug, PartialEq)]
-struct BBox<T: Copy> {
-    min: Point<T>,
-    max: Point<T>,
-}
-
-impl<T: Copy> BBox<T> {
-    fn new(min: (T, T), max: (T, T)) -> BBox<T> {
-        BBox {
-            min: Point(min.0, min.1),
-            max: Point(max.0, max.1),
-        }
-    }
-
-    fn left(&self) -> T {
-        self.min.0
-    }
-
-    fn right(&self) -> T {
-        self.max.0
-    }
-
-    fn top(&self) -> T {
-        self.max.1
-    }
-
-    fn bottom(&self) -> T {
-        self.min.1
-    }
 }
 
 // COMPONENTS
@@ -453,11 +419,6 @@ fn setup_entities(
                     35,
                     1,
                 )),
-                // sprite: Sprite {
-                //     color: Color::BLACK,
-                //     custom_size: Some(Vec2::new(48.0, 48.0)),
-                //     ..Default::default()
-                // },
                 ..Default::default()
             })
             .insert(animations.idle.clone())
@@ -830,151 +791,5 @@ fn blink_player(time: Res<Time>, mut player_query: Query<(&Player, &mut Visibili
         visibility.is_visible = (time_seconds * 10.0) as i32 % 2 == 0;
     } else {
         visibility.is_visible = true;
-    }
-}
-
-/// Map screen-space bbox to tile-space bbox
-fn get_tile_space_bbox(bbox: &BBox<f32>) -> BBox<i32> {
-    BBox::new(
-        (
-            (bbox.min.0 / TILE_SIZE).floor() as i32,
-            (bbox.min.1 / TILE_SIZE).floor() as i32,
-        ),
-        (
-            (bbox.max.0 / TILE_SIZE).floor() as i32,
-            (bbox.max.1 / TILE_SIZE).floor() as i32,
-        ),
-    )
-}
-
-/// Map tile-space bbox to list of tile coords
-fn get_tile_list(bbox: BBox<i32>) -> Vec<Point<i32>> {
-    let mut tiles = Vec::new();
-
-    for y in bbox.bottom()..(bbox.top() + 1) {
-        for x in bbox.left()..(bbox.right() + 1) {
-            tiles.push(Point(x, y));
-        }
-    }
-
-    tiles
-}
-
-/// Convert screen-space Point to tile-space
-fn to_tile_space(pos: Point<f32>) -> Point<i32> {
-    Point(
-        (pos.0 / TILE_SIZE).floor() as i32,
-        (pos.1 / TILE_SIZE).floor() as i32,
-    )
-}
-
-fn get_first_obstacle_pos_downward(
-    obstacles: &HashMap<Point<i32>, Obstacle>,
-    pos: Point<i32>,
-) -> Option<Point<i32>> {
-    for y in (0..pos.1).rev() {
-        let obs = obstacles.get(&Point(pos.0, y));
-
-        if obs.is_some() {
-            return Some(obs.unwrap().pos.clone());
-        }
-    }
-
-    None
-}
-
-/// Given a tile list, get the ones with obstacles
-fn get_obstacle_list(
-    tiles: Vec<Point<i32>>,
-    obstacles: &HashMap<Point<i32>, Obstacle>,
-    ignore_one_way: bool,
-) -> Vec<&Obstacle> {
-    tiles
-        .iter()
-        .filter_map(|p| obstacles.get(p))
-        .filter(|o| {
-            if ignore_one_way {
-                return !o.is_one_way;
-            }
-
-            true
-        })
-        .collect::<Vec<_>>()
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_get_tile_space_bbox() {
-        assert_eq!(
-            get_tile_space_bbox(&BBox::new((1.0, 1.0), (24.0, 38.0))),
-            BBox::new((0, 0), (1, 2))
-        );
-
-        assert_eq!(
-            get_tile_space_bbox(&BBox::new((0.0, 0.0), (16.0, 16.0))),
-            BBox::new((0, 0), (1, 1))
-        );
-
-        assert_eq!(
-            get_tile_space_bbox(&BBox::new((0.0, 0.0), (15.0, 15.0))),
-            BBox::new((0, 0), (0, 0))
-        );
-
-        assert_eq!(
-            get_tile_space_bbox(&BBox::new((0.0, 0.0), (70.0, 8.0))),
-            BBox::new((0, 0), (4, 0))
-        );
-    }
-
-    #[test]
-    fn test_get_tile_list() {
-        assert_eq!(
-            get_tile_list(BBox::new((0, 0), (1, 2))),
-            vec![
-                Point(0, 0),
-                Point(1, 0),
-                Point(0, 1),
-                Point(1, 1),
-                Point(0, 2),
-                Point(1, 2)
-            ]
-        );
-
-        assert_eq!(get_tile_list(BBox::new((0, 0), (0, 0))), vec![Point(0, 0)]);
-    }
-
-    #[test]
-    fn test_get_obstacle_list() {
-        let mut obstacles = HashMap::new();
-
-        obstacles.insert(
-            Point(0, 1),
-            Obstacle {
-                pos: Point(0, 1),
-                is_one_way: false,
-            },
-        );
-
-        obstacles.insert(
-            Point(1, 1),
-            Obstacle {
-                pos: Point(1, 1),
-                is_one_way: true,
-            },
-        );
-
-        let list = get_obstacle_list(get_tile_list(BBox::new((0, 0), (1, 2))), &obstacles, false);
-
-        assert_eq!(list.len(), 2);
-        assert_eq!(list[0].pos, Point(0, 1));
-        assert_eq!(list[1].pos, Point(1, 1));
-
-        let list = get_obstacle_list(get_tile_list(BBox::new((0, 0), (1, 2))), &obstacles, true);
-
-        assert_eq!(list.len(), 1);
-        assert_eq!(list[0].pos, Point(0, 1));
     }
 }
