@@ -84,7 +84,7 @@ impl Plugin for GamePlugin {
                     .with_system(vfx::add_landing_dust.after("movement"))
                     .with_system(vfx::add_direction_change_dust.after("movement"))
                     .with_system(sfx::play_landing_sound.after("movement"))
-                    .with_system(vfx::add_ceil_hit_sprite.after("movement"))
+                    // .with_system(vfx::add_ceil_hit_sprite.after("movement"))
                     .with_system(sfx::play_ceil_hit_sound.after("movement"))
                     .with_system(vfx::remove_vfx)
                     .with_system(camera::camera_movement.after("movement"))
@@ -110,7 +110,9 @@ pub struct Animations {
     jump: Vec<Handle<SpriteSheetAnimation>>,
     // VFX
     vfx_debug: Handle<SpriteSheetAnimation>,
-    run_jump_dust: Handle<SpriteSheetAnimation>,
+    vfx_run_jump_dust: Handle<SpriteSheetAnimation>,
+    vfx_landing_dust: Handle<SpriteSheetAnimation>,
+    vfx_ceil_hit: Handle<SpriteSheetAnimation>,
     vfx_atlas: Handle<TextureAtlas>,
 }
 

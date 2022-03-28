@@ -198,15 +198,21 @@ pub fn setup_entities(
         animations.vfx_atlas = textures.add(TextureAtlas::from_grid(
             game_assets.vfx_sprite_sheet.clone(),
             Vec2::new(64.0, 32.0),
-            11,
+            37,
             1,
         ));
 
         animations.vfx_debug = animation_sheets
             .add(SpriteSheetAnimation::from_range(0..=0, Duration::from_millis(1000)).once());
 
-        animations.run_jump_dust = animation_sheets
-            .add(SpriteSheetAnimation::from_range(1..=9, Duration::from_millis(30)).once());
+        animations.vfx_run_jump_dust = animation_sheets
+            .add(SpriteSheetAnimation::from_range(1..=11, Duration::from_millis(30)).once());
+
+        animations.vfx_ceil_hit = animation_sheets
+            .add(SpriteSheetAnimation::from_range(12..=18, Duration::from_millis(30)).once());
+
+        animations.vfx_landing_dust = animation_sheets
+            .add(SpriteSheetAnimation::from_range(19..=36, Duration::from_millis(30)).once());
 
         animations.jump = vec![
             animation_sheets.add(SpriteSheetAnimation::from_range(

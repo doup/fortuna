@@ -3,7 +3,8 @@ use bevy::prelude::*;
 
 use super::{
     events::{CeilHitEvent, DirectionChangeEvent, JumpEvent, LandingEvent},
-    Animations, Player,
+    player::PLAYER_HEIGHT_HALF,
+    Animations, Player, PlayerDirection,
 };
 
 #[derive(Component)]
@@ -21,17 +22,22 @@ fn add_vfx(
     animation: Handle<SpriteSheetAnimation>,
     position: Vec2,
     align: AlignVfx,
+    flip_x: bool,
 ) {
     let position = if align == AlignVfx::Top {
-        position + Vec2::new(0.0, 16.0)
+        position + Vec2::new(0.0, PLAYER_HEIGHT_HALF)
     } else {
-        position - Vec2::new(0.0, 16.0)
+        position - Vec2::new(0.0, PLAYER_HEIGHT_HALF)
     };
 
     commands
         .spawn_bundle(SpriteSheetBundle {
             transform: Transform {
-                translation: position.extend(10.0),
+                translation: position.extend(100.0),
+                ..Default::default()
+            },
+            sprite: TextureAtlasSprite {
+                flip_x,
                 ..Default::default()
             },
             texture_atlas,
@@ -70,9 +76,10 @@ pub fn add_jump_dust(
         add_vfx(
             &mut commands,
             animations.vfx_atlas.clone(),
-            animations.run_jump_dust.clone(),
+            animations.vfx_run_jump_dust.clone(),
             ev.position,
             AlignVfx::Bottom,
+            ev.velocity.x > 0.0,
         );
     }
 }
@@ -83,13 +90,16 @@ pub fn add_landing_dust(
     mut commands: Commands,
 ) {
     for ev in landing_event.iter() {
-        add_vfx(
-            &mut commands,
-            animations.vfx_atlas.clone(),
-            animations.vfx_debug.clone(),
-            ev.position,
-            AlignVfx::Bottom,
-        );
+        if ev.velocity.y < -600.0 {
+            add_vfx(
+                &mut commands,
+                animations.vfx_atlas.clone(),
+                animations.vfx_landing_dust.clone(),
+                ev.position,
+                AlignVfx::Bottom,
+                rand::random(),
+            );
+        }
     }
 }
 
@@ -102,9 +112,10 @@ pub fn add_direction_change_dust(
         add_vfx(
             &mut commands,
             animations.vfx_atlas.clone(),
-            animations.vfx_debug.clone(),
+            animations.vfx_run_jump_dust.clone(),
             ev.position,
             AlignVfx::Bottom,
+            ev.new_direction == PlayerDirection::Right,
         );
     }
 }
@@ -118,9 +129,10 @@ pub fn add_ceil_hit_sprite(
         add_vfx(
             &mut commands,
             animations.vfx_atlas.clone(),
-            animations.vfx_debug.clone(),
+            animations.vfx_ceil_hit.clone(),
             ev.position,
             AlignVfx::Top,
+            rand::random(),
         );
     }
 }

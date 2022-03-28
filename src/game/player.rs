@@ -13,7 +13,7 @@ use super::{
 const SKIN_SIZE: f32 = 2.0;
 const PLAYER_SPRITE_HEIGHT: f32 = 48.0;
 const PLAYER_WIDTH_HALF: f32 = PLAYER_WIDTH / 2.0;
-const PLAYER_HEIGHT_HALF: f32 = PLAYER_HEIGHT / 2.0;
+pub const PLAYER_HEIGHT_HALF: f32 = PLAYER_HEIGHT / 2.0;
 
 pub fn player_color(
     _stats: Res<StatsRes>,
