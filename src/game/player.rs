@@ -73,9 +73,7 @@ pub fn player_movement(
             tile_x.map(|x| x as f32 * TILE_SIZE + TILE_SIZE + PLAYER_WIDTH_HALF)
         };
 
-        if nearest_obstacle_x.is_some() {
-            let nearest_obstacle_x = nearest_obstacle_x.unwrap();
-
+        if let Some(nearest_obstacle_x) = nearest_obstacle_x {
             position.value.x = if is_moving_right {
                 pos_x.min(nearest_obstacle_x)
             } else {
@@ -115,9 +113,7 @@ pub fn player_movement(
             tile_y.map(|y| y as f32 * TILE_SIZE + TILE_SIZE + PLAYER_HEIGHT_HALF)
         };
 
-        if nearest_obstacle_y.is_some() {
-            let nearest_obstacle_y = nearest_obstacle_y.unwrap();
-
+        if let Some(nearest_obstacle_y) = nearest_obstacle_y {
             if is_moving_up && (nearest_obstacle_y < pos_y)
                 || !is_moving_up && (nearest_obstacle_y > pos_y)
             {
@@ -126,7 +122,7 @@ pub fn player_movement(
                 if !is_moving_up {
                     if player.last_ground_time.is_none() {
                         landing_event.send(LandingEvent {
-                            position: position.value.clone(),
+                            position: position.value,
                             velocity: Vec2::new(velocity.x, velocity.y),
                         });
                     }
@@ -136,7 +132,7 @@ pub fn player_movement(
                 } else {
                     velocity.y = -velocity.y * 0.1;
                     ceil_hit_event.send(CeilHitEvent {
-                        position: position.value.clone(),
+                        position: position.value,
                     });
                 }
             } else {

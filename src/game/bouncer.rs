@@ -33,15 +33,11 @@ pub fn get_bouncer_from_entity_instance(entity: &EntityInstance) -> Bouncer {
         .filter(|field| field.identifier == "push_left")
         .collect::<Vec<_>>();
 
-    let allow = if let FieldValue::String(bouncer_type_option) = bouncer_type_cfg[0].value.clone() {
-        if let Some(bouncer_type) = bouncer_type_option {
-            match bouncer_type.as_str() {
-                "rich" => BouncerType::WealthRich,
-                "skin_light" => BouncerType::SkinColorLight,
-                _ => BouncerType::WealthRich,
-            }
-        } else {
-            BouncerType::WealthRich
+    let allow = if let FieldValue::String(Some(bouncer_type)) = bouncer_type_cfg[0].value.clone() {
+        match bouncer_type.as_str() {
+            "rich" => BouncerType::WealthRich,
+            "skin_light" => BouncerType::SkinColorLight,
+            _ => BouncerType::WealthRich,
         }
     } else {
         BouncerType::WealthRich
@@ -88,7 +84,7 @@ pub fn bounce_player(
                 player_position.value.x -= 2.0 * PLAYER_WIDTH;
             }
 
-            if let None = player.bounce_force {
+            if player.bounce_force.is_none() {
                 println!("You're not allowed here: {:?}", bouncer);
 
                 player.bounce_force = Some(BOUNCER_FORCE * bouncer.direction);

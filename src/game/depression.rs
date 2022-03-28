@@ -22,7 +22,7 @@ pub fn show_depressed_text(
     let (mut depre_visibility, mut depre_transform) = depressed_text_query.single_mut();
 
     depre_visibility.is_visible = player.depressed_until > time.seconds_since_startup();
-    depre_transform.translation = transform.translation.clone() + Vec3::new(0.0, 24.0, 0.0);
+    depre_transform.translation = transform.translation + Vec3::new(0.0, 24.0, 0.0);
 }
 
 pub fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Query<&mut Player>) {
@@ -31,10 +31,8 @@ pub fn trigger_depression(stats: Res<StatsRes>, time: Res<Time>, mut players: Qu
     let can_get_depressed = stats.value.is_depressive
         && (player.depressed_until + MIN_TIME_BETWEEN_DEPRE) < time.seconds_since_startup();
 
-    if can_get_depressed {
-        if rand::thread_rng().gen_range(0.0..1.0) < stats.value.depre_chance {
-            player.depressed_until = time.seconds_since_startup()
-                + rand::thread_rng().gen_range(MIN_DEPRE_DURATION..MAX_DEPRE_DURATION);
-        }
+    if can_get_depressed && rand::thread_rng().gen_range(0.0..1.0) < stats.value.depre_chance {
+        player.depressed_until = time.seconds_since_startup()
+            + rand::thread_rng().gen_range(MIN_DEPRE_DURATION..MAX_DEPRE_DURATION);
     }
 }

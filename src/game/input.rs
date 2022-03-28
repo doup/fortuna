@@ -58,7 +58,7 @@ pub fn handle_input(
 
             jump_event.send(JumpEvent {
                 is_grounded,
-                position: position.value.clone(),
+                position: position.value,
                 velocity: Vec2::new(velocity.x, velocity.y),
             });
         }
@@ -77,7 +77,7 @@ pub fn handle_input(
     if keys.pressed(KeyCode::Left) {
         if player.direction != PlayerDirection::Left {
             direction_change_event.send(DirectionChangeEvent {
-                position: position.value.clone(),
+                position: position.value,
                 new_direction: PlayerDirection::Left,
             });
         }
@@ -87,7 +87,7 @@ pub fn handle_input(
     } else if keys.pressed(KeyCode::Right) {
         if player.direction != PlayerDirection::Right {
             direction_change_event.send(DirectionChangeEvent {
-                position: position.value.clone(),
+                position: position.value,
                 new_direction: PlayerDirection::Right,
             });
         }

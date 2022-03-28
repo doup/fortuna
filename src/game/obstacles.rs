@@ -67,10 +67,10 @@ pub fn get_first_obstacle_pos_downward(
     pos: Point<i32>,
 ) -> Option<Point<i32>> {
     for y in (0..pos.1).rev() {
-        let obs = obstacles.get(&Point(pos.0, y));
+        let maybe_obs = obstacles.get(&Point(pos.0, y));
 
-        if obs.is_some() {
-            return Some(obs.unwrap().pos.clone());
+        if let Some(obs) = maybe_obs {
+            return Some(obs.pos.clone());
         }
     }
 

@@ -1,8 +1,7 @@
-use std::time::Duration;
-
 use benimator::{Play, SpriteSheetAnimation};
 use bevy::prelude::*;
 use bevy_ecs_ldtk::{EntityInstance, GridCoords, LdtkWorldBundle, LevelEvent};
+use std::time::Duration;
 
 use crate::{
     loading::{GameAssets, UIAssets},
@@ -119,31 +118,28 @@ pub fn setup_obstacles(
     one_way_platforms: Query<&GridCoords, With<OneWayPlatform>>,
 ) {
     for event in level_events.iter() {
-        match event {
-            LevelEvent::Transformed(_) => {
-                obstacles.map.clear();
+        if let LevelEvent::Transformed(_) = event {
+            obstacles.map.clear();
 
-                walls.for_each(|grid_coords| {
-                    obstacles.map.insert(
-                        Point(grid_coords.x, grid_coords.y),
-                        Obstacle {
-                            pos: Point(grid_coords.x, grid_coords.y),
-                            is_one_way: false,
-                        },
-                    );
-                });
+            walls.for_each(|grid_coords| {
+                obstacles.map.insert(
+                    Point(grid_coords.x, grid_coords.y),
+                    Obstacle {
+                        pos: Point(grid_coords.x, grid_coords.y),
+                        is_one_way: false,
+                    },
+                );
+            });
 
-                one_way_platforms.for_each(|grid_coords| {
-                    obstacles.map.insert(
-                        Point(grid_coords.x, grid_coords.y),
-                        Obstacle {
-                            pos: Point(grid_coords.x, grid_coords.y),
-                            is_one_way: true,
-                        },
-                    );
-                });
-            }
-            _ => (),
+            one_way_platforms.for_each(|grid_coords| {
+                obstacles.map.insert(
+                    Point(grid_coords.x, grid_coords.y),
+                    Obstacle {
+                        pos: Point(grid_coords.x, grid_coords.y),
+                        is_one_way: true,
+                    },
+                );
+            });
         }
     }
 }
@@ -163,11 +159,11 @@ pub fn setup_entities(
         .filter(|(_, instance)| instance.identifier == "Player")
         .collect::<Vec<_>>();
 
-    if player_entities.len() > 0 {
+    if !player_entities.is_empty() {
         // Prepare Player Positions Resource
         player_positions.value = player_entities
             .iter()
-            .map(|(transform, _)| *transform.clone())
+            .map(|(transform, _)| *(*transform))
             .collect::<Vec<_>>();
 
         // Sort DESC by translation.y
@@ -288,7 +284,7 @@ pub fn setup_entities(
         .filter(|(_, instance)| instance.identifier == "Goal")
         .collect::<Vec<_>>();
 
-    if goal_entities.len() > 0 {
+    if !goal_entities.is_empty() {
         let (goal_transform, goal_entity) = goal_entities[0];
 
         commands
@@ -303,7 +299,7 @@ pub fn setup_entities(
                     ..Default::default()
                 },
                 transform: Transform {
-                    translation: goal_transform.translation.clone(),
+                    translation: goal_transform.translation,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -332,12 +328,12 @@ pub fn setup_entities(
                     ..Default::default()
                 },
                 transform: Transform {
-                    translation: bouncer_transform.translation.clone(),
+                    translation: bouncer_transform.translation,
                     ..Default::default()
                 },
                 ..Default::default()
             })
-            .insert(bouncer::get_bouncer_from_entity_instance(&bouncer_entity))
+            .insert(bouncer::get_bouncer_from_entity_instance(bouncer_entity))
             .insert(GameStateEntity);
     }
 }

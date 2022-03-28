@@ -7,7 +7,7 @@ use super::{
 };
 
 #[derive(Component)]
-pub struct VFX;
+pub struct Vfx;
 
 pub fn blink_player(time: Res<Time>, mut player_query: Query<(&Player, &mut Visibility)>) {
     let (player, mut visibility) = player_query.single_mut();
@@ -20,7 +20,7 @@ pub fn blink_player(time: Res<Time>, mut player_query: Query<(&Player, &mut Visi
     }
 }
 
-pub fn remove_vfx(dust_query: Query<(Entity, Option<&Play>), With<VFX>>, mut commands: Commands) {
+pub fn remove_vfx(dust_query: Query<(Entity, Option<&Play>), With<Vfx>>, mut commands: Commands) {
     for (entity, maybe_play) in dust_query.iter() {
         if maybe_play.is_none() {
             commands.entity(entity).despawn();
@@ -45,7 +45,7 @@ pub fn add_jump_dust(
             })
             .insert(animations.jump_dust.clone())
             .insert(Play)
-            .insert(VFX);
+            .insert(Vfx);
     }
 }
 
@@ -66,7 +66,7 @@ pub fn add_landing_dust(
             })
             .insert(animations.landing_dust.clone())
             .insert(Play)
-            .insert(VFX);
+            .insert(Vfx);
     }
 }
 
