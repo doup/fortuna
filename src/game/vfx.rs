@@ -37,7 +37,7 @@ fn add_vfx(
             texture_atlas,
             ..Default::default()
         })
-        .insert(animation.clone())
+        .insert(animation)
         .insert(Play)
         .insert(Vfx);
 }

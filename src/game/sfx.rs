@@ -14,13 +14,13 @@ pub fn play_jump_sound(
 }
 
 pub fn play_landing_sound(mut landing_event: EventReader<LandingEvent>) {
-    for ev in landing_event.iter() {
+    for _ in landing_event.iter() {
         println!("Play landing sound");
     }
 }
 
 pub fn play_ceil_hit_sound(mut ceil_hit_event: EventReader<CeilHitEvent>) {
-    for ev in ceil_hit_event.iter() {
+    for _ in ceil_hit_event.iter() {
         println!("Play ceil-hit sound");
     }
 }
