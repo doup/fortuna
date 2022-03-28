@@ -1,6 +1,7 @@
 mod bouncer;
 mod camera;
 mod depression;
+mod events;
 mod goal;
 mod goo;
 mod input;
@@ -35,10 +36,10 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(LdtkPlugin)
-            .add_event::<JumpEvent>()
-            .add_event::<LandingEvent>()
-            .add_event::<CeilHitEvent>()
-            .add_event::<DirectionChangeEvent>()
+            .add_event::<events::JumpEvent>()
+            .add_event::<events::LandingEvent>()
+            .add_event::<events::CeilHitEvent>()
+            .add_event::<events::DirectionChangeEvent>()
             .init_resource::<Animations>()
             .insert_resource(PlayerPositionsRes { value: vec![] })
             .insert_resource(StatsRes {
@@ -98,28 +99,6 @@ impl Plugin for GamePlugin {
                 SystemSet::on_exit(GameState::Game).with_system(clean_state::<GameStateEntity>),
             );
     }
-}
-
-#[derive(Debug)]
-pub struct JumpEvent {
-    is_grounded: bool,
-    position: Vec2,
-    velocity: Vec2,
-}
-
-pub struct LandingEvent {
-    position: Vec2,
-    velocity: Vec2,
-}
-
-pub struct CeilHitEvent {
-    position: Vec2,
-}
-
-#[derive(Debug)]
-pub struct DirectionChangeEvent {
-    position: Vec2,
-    new_direction: PlayerDirection,
 }
 
 // RESOURCES

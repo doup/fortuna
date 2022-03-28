@@ -1,7 +1,10 @@
 use benimator::Play;
 use bevy::prelude::*;
 
-use super::{Animations, CeilHitEvent, DirectionChangeEvent, JumpEvent, LandingEvent, Player};
+use super::{
+    events::{CeilHitEvent, DirectionChangeEvent, JumpEvent, LandingEvent},
+    Animations, Player,
+};
 
 #[derive(Component)]
 pub struct VFX;

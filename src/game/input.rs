@@ -3,7 +3,9 @@ use bevy::prelude::*;
 use crate::{stats::StatsRes, GameState};
 
 use super::{
-    bouncer, DirectionChangeEvent, JumpEvent, Player, PlayerDirection, Position, Velocity, GRAVITY,
+    bouncer,
+    events::{DirectionChangeEvent, JumpEvent},
+    Player, PlayerDirection, Position, Velocity, GRAVITY,
 };
 
 const COYOTE_TIME: f64 = 0.125; // seconds after falling from a platform that still can jump

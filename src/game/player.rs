@@ -4,9 +4,10 @@ use bevy::prelude::*;
 use crate::stats::StatsRes;
 
 use super::{
+    events::{CeilHitEvent, LandingEvent},
     obstacles::{get_obstacle_list, get_tile_list, get_tile_space_bbox, BBox},
-    Animations, CeilHitEvent, LandingEvent, ObstaclesRes, Player, PlayerDirection, Position,
-    Velocity, GRAVITY, PLAYER_HEIGHT, PLAYER_WIDTH, TILE_SIZE,
+    Animations, ObstaclesRes, Player, PlayerDirection, Position, Velocity, GRAVITY, PLAYER_HEIGHT,
+    PLAYER_WIDTH, TILE_SIZE,
 };
 
 const SKIN_SIZE: f32 = 2.0;

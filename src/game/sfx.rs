@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{CeilHitEvent, JumpEvent, LandingEvent};
+use super::events::{CeilHitEvent, JumpEvent, LandingEvent};
 use crate::loading::GameAssets;
 
 pub fn play_jump_sound(
