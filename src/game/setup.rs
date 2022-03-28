@@ -195,18 +195,18 @@ pub fn setup_entities(
             Duration::from_millis(30),
         ));
 
-        animations.dust_atlas = textures.add(TextureAtlas::from_grid(
-            game_assets.dust_anim.clone(),
-            Vec2::new(16.0, 16.0),
-            5,
+        animations.vfx_atlas = textures.add(TextureAtlas::from_grid(
+            game_assets.vfx_sprite_sheet.clone(),
+            Vec2::new(64.0, 32.0),
+            11,
             1,
         ));
 
-        animations.jump_dust = animation_sheets
-            .add(SpriteSheetAnimation::from_range(0..=4, Duration::from_millis(100)).once());
+        animations.vfx_debug = animation_sheets
+            .add(SpriteSheetAnimation::from_range(0..=0, Duration::from_millis(1000)).once());
 
-        animations.landing_dust = animation_sheets
-            .add(SpriteSheetAnimation::from_range(0..=4, Duration::from_millis(100)).once());
+        animations.run_jump_dust = animation_sheets
+            .add(SpriteSheetAnimation::from_range(1..=9, Duration::from_millis(30)).once());
 
         animations.jump = vec![
             animation_sheets.add(SpriteSheetAnimation::from_range(
@@ -254,7 +254,7 @@ pub fn setup_entities(
         commands
             .spawn_bundle(SpriteSheetBundle {
                 texture_atlas: textures.add(TextureAtlas::from_grid(
-                    game_assets.player_anim.clone(),
+                    game_assets.player_sprite_sheet.clone(),
                     Vec2::new(48.0, 48.0),
                     35,
                     1,

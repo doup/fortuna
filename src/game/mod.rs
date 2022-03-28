@@ -104,12 +104,14 @@ impl Plugin for GamePlugin {
 // RESOURCES
 #[derive(Default)]
 pub struct Animations {
+    // Player
     idle: Handle<SpriteSheetAnimation>,
     run: Handle<SpriteSheetAnimation>,
     jump: Vec<Handle<SpriteSheetAnimation>>,
-    jump_dust: Handle<SpriteSheetAnimation>,
-    landing_dust: Handle<SpriteSheetAnimation>,
-    dust_atlas: Handle<TextureAtlas>,
+    // VFX
+    vfx_debug: Handle<SpriteSheetAnimation>,
+    run_jump_dust: Handle<SpriteSheetAnimation>,
+    vfx_atlas: Handle<TextureAtlas>,
 }
 
 pub struct ObstaclesRes {

@@ -49,9 +49,9 @@ pub struct GameAssets {
     #[asset(path = "fortuna.ldtk")]
     pub map: Handle<LdtkAsset>,
     #[asset(path = "player.png")]
-    pub player_anim: Handle<Image>,
-    #[asset(path = "dust.png")]
-    pub dust_anim: Handle<Image>,
+    pub player_sprite_sheet: Handle<Image>,
+    #[asset(path = "vfx.png")]
+    pub vfx_sprite_sheet: Handle<Image>,
     #[asset(path = "jump.ogg")]
     pub jump_sound: Handle<AudioSource>,
 }
