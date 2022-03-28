@@ -52,10 +52,10 @@ pub fn goo_movement(
     let camera_position = cameras.single();
     let (mut goo, mut transform, sprite) = goo_query.single_mut();
 
-    goo.y = GOO_INITIAL_POS;
-    // goo.y = GOO_INITIAL_POS - goo.regress
-    //     + (time.seconds_since_startup() - goo.start_time) as f32 * GOO_SPEED
-    //     + ((time.seconds_since_startup() * 2.0).sin() as f32) * GOO_SIN_AMPLITUDE;
+    // goo.y = GOO_INITIAL_POS;
+    goo.y = GOO_INITIAL_POS - goo.regress
+        + (time.seconds_since_startup() - goo.start_time) as f32 * GOO_SPEED
+        + ((time.seconds_since_startup() * 2.0).sin() as f32) * GOO_SIN_AMPLITUDE;
 
     transform.translation.x = camera_position.translation.x;
     transform.translation.y = goo.y - sprite.custom_size.unwrap().y / 2.0;

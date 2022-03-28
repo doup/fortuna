@@ -9,12 +9,6 @@ mod utils;
 mod win_menu;
 
 use bevy::prelude::*;
-use character_menu::CharacterMenuPlugin;
-use game::GamePlugin;
-use loading::LoadingPlugin;
-use lose_menu::LoseMenuPlugin;
-use main_menu::MainMenuPlugin;
-use win_menu::WinPlugin;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum GameState {
@@ -32,11 +26,11 @@ impl Plugin for FortunaPlugin {
     fn build(&self, app: &mut App) {
         app.add_state(GameState::Loading)
             .insert_resource(ClearColor(Color::rgb(1.0, 1.0, 1.0)))
-            .add_plugin(CharacterMenuPlugin)
-            .add_plugin(GamePlugin)
-            .add_plugin(LoadingPlugin)
-            .add_plugin(MainMenuPlugin)
-            .add_plugin(LoseMenuPlugin)
-            .add_plugin(WinPlugin);
+            .add_plugin(character_menu::CharacterMenuPlugin)
+            .add_plugin(game::GamePlugin)
+            .add_plugin(loading::LoadingPlugin)
+            .add_plugin(main_menu::MainMenuPlugin)
+            .add_plugin(lose_menu::LoseMenuPlugin)
+            .add_plugin(win_menu::WinPlugin);
     }
 }
