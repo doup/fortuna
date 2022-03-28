@@ -4,8 +4,8 @@ use crate::GameState;
 
 use super::{
     camera::GameCamera,
-    obstacles::{get_first_obstacle_pos_downward, to_tile_space, Point},
-    ObstaclesRes, Player, Position, PLAYER_BLINK_DURATION, TILE_SIZE,
+    obstacles::{get_first_obstacle_pos_downward, to_tile_space},
+    GameStateEntity, ObstaclesRes, Player, Position, TILE_SIZE,
 };
 
 const GOO_INITIAL_POS: f32 = -50.0;
@@ -30,6 +30,20 @@ impl Goo {
     }
 }
 
+pub fn setup_goo(mut commands: Commands, time: Res<Time>) {
+    commands
+        .spawn_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::BLACK,
+                custom_size: Some(Vec2::new(1280.0, 720.0)),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(Goo::new(time.seconds_since_startup()))
+        .insert(GameStateEntity);
+}
+
 pub fn goo_movement(
     time: Res<Time>,
     cameras: Query<&Transform, (With<GameCamera>, Without<Goo>)>,
@@ -38,9 +52,10 @@ pub fn goo_movement(
     let camera_position = cameras.single();
     let (mut goo, mut transform, sprite) = goo_query.single_mut();
 
-    goo.y = GOO_INITIAL_POS - goo.regress
-        + (time.seconds_since_startup() - goo.start_time) as f32 * GOO_SPEED
-        + ((time.seconds_since_startup() * 2.0).sin() as f32) * GOO_SIN_AMPLITUDE;
+    goo.y = GOO_INITIAL_POS;
+    // goo.y = GOO_INITIAL_POS - goo.regress
+    //     + (time.seconds_since_startup() - goo.start_time) as f32 * GOO_SPEED
+    //     + ((time.seconds_since_startup() * 2.0).sin() as f32) * GOO_SIN_AMPLITUDE;
 
     transform.translation.x = camera_position.translation.x;
     transform.translation.y = goo.y - sprite.custom_size.unwrap().y / 2.0;
@@ -72,7 +87,7 @@ pub fn goo_collision(
             let floor_y = first_down_obstacle_tile_pos.1 as f32 * TILE_SIZE + TILE_SIZE;
             let distance_to_floor = goo.y - floor_y;
 
-            player.blink_until = time.seconds_since_startup() + PLAYER_BLINK_DURATION;
+            player.blink(time.seconds_since_startup(), None);
             goo.regress += distance_to_floor + GOO_HIT_REGRESS;
         }
     }

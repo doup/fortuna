@@ -92,7 +92,7 @@ pub fn bounce_player(
                 println!("You're not allowed here: {:?}", bouncer);
 
                 player.bounce_force = Some(BOUNCER_FORCE * bouncer.direction);
-                player.blink_until = time.seconds_since_startup() + BOUNCER_DURATION as f64;
+                player.blink(time.seconds_since_startup(), Some(BOUNCER_DURATION as f64));
             }
         }
     }
