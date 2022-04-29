@@ -48,10 +48,12 @@ pub struct UIAssets {
 pub struct GameAssets {
     #[asset(path = "fortuna.ldtk")]
     pub map: Handle<LdtkAsset>,
+    #[asset(texture_atlas(tile_size_x = 48.0, tile_size_y = 48.0, columns = 35, rows = 1))]
     #[asset(path = "player.png")]
-    pub player_sprite_sheet: Handle<Image>,
+    pub player_atlas: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 64.0, tile_size_y = 32.0, columns = 37, rows = 1))]
     #[asset(path = "vfx.png")]
-    pub vfx_sprite_sheet: Handle<Image>,
+    pub vfx_atlas: Handle<TextureAtlas>,
     #[asset(path = "jump.ogg")]
     pub jump_sound: Handle<AudioSource>,
 }

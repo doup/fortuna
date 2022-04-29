@@ -110,11 +110,11 @@ pub struct Animations {
     run: Handle<SpriteSheetAnimation>,
     jump: Vec<Handle<SpriteSheetAnimation>>,
     // VFX
+    vfx_atlas: Handle<TextureAtlas>,
     vfx_debug: Handle<SpriteSheetAnimation>,
     vfx_run_jump_dust: Handle<SpriteSheetAnimation>,
     vfx_landing_dust: Handle<SpriteSheetAnimation>,
     vfx_ceil_hit: Handle<SpriteSheetAnimation>,
-    vfx_atlas: Handle<TextureAtlas>,
 }
 
 pub struct ObstaclesRes {

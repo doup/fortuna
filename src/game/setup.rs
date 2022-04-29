@@ -144,12 +144,50 @@ pub fn setup_obstacles(
     }
 }
 
+pub fn setup_animations(
+    game_assets: Res<GameAssets>,
+    mut animations: ResMut<Animations>,
+    mut animation_sheets: ResMut<Assets<SpriteSheetAnimation>>,
+) {
+    let frame_duration = Duration::from_millis(30);
+
+    animations.idle = animation_sheets.add(SpriteSheetAnimation::from_range(0..=0, frame_duration));
+
+    animations.run = animation_sheets.add(SpriteSheetAnimation::from_range(1..=24, frame_duration));
+
+    animations.vfx_atlas = game_assets.vfx_atlas.clone();
+
+    animations.vfx_debug = animation_sheets
+        .add(SpriteSheetAnimation::from_range(0..=0, Duration::from_millis(1000)).once());
+
+    animations.vfx_run_jump_dust =
+        animation_sheets.add(SpriteSheetAnimation::from_range(1..=11, frame_duration).once());
+
+    animations.vfx_ceil_hit =
+        animation_sheets.add(SpriteSheetAnimation::from_range(12..=18, frame_duration).once());
+
+    animations.vfx_landing_dust =
+        animation_sheets.add(SpriteSheetAnimation::from_range(19..=36, frame_duration).once());
+
+    animations.jump = vec![
+        animation_sheets.add(SpriteSheetAnimation::from_range(25..=25, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(26..=26, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(27..=27, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(28..=28, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(29..=29, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(30..=30, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(31..=31, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(32..=32, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(33..=33, frame_duration)),
+        animation_sheets.add(SpriteSheetAnimation::from_range(34..=34, frame_duration)),
+    ];
+}
+
+
 pub fn setup_entities(
     stats: Res<StatsRes>,
     game_assets: Res<GameAssets>,
-    mut animations: ResMut<Animations>,
-    mut textures: ResMut<Assets<TextureAtlas>>,
-    mut animation_sheets: ResMut<Assets<SpriteSheetAnimation>>,
+    animations: Res<Animations>,
     mut player_positions: ResMut<PlayerPositionsRes>,
     mut commands: Commands,
     entities: Query<(&Transform, &EntityInstance), Added<EntityInstance>>,
@@ -184,87 +222,9 @@ pub fn setup_entities(
 
         let &transform = player_positions.value.get(pos).unwrap();
 
-        // Animation
-        animations.idle = animation_sheets.add(SpriteSheetAnimation::from_range(
-            0..=0,
-            Duration::from_millis(30),
-        ));
-
-        animations.run = animation_sheets.add(SpriteSheetAnimation::from_range(
-            1..=24,
-            Duration::from_millis(30),
-        ));
-
-        animations.vfx_atlas = textures.add(TextureAtlas::from_grid(
-            game_assets.vfx_sprite_sheet.clone(),
-            Vec2::new(64.0, 32.0),
-            37,
-            1,
-        ));
-
-        animations.vfx_debug = animation_sheets
-            .add(SpriteSheetAnimation::from_range(0..=0, Duration::from_millis(1000)).once());
-
-        animations.vfx_run_jump_dust = animation_sheets
-            .add(SpriteSheetAnimation::from_range(1..=11, Duration::from_millis(30)).once());
-
-        animations.vfx_ceil_hit = animation_sheets
-            .add(SpriteSheetAnimation::from_range(12..=18, Duration::from_millis(30)).once());
-
-        animations.vfx_landing_dust = animation_sheets
-            .add(SpriteSheetAnimation::from_range(19..=36, Duration::from_millis(30)).once());
-
-        animations.jump = vec![
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                25..=25,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                26..=26,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                27..=27,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                28..=28,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                29..=29,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                30..=30,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                31..=31,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                32..=32,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                33..=33,
-                Duration::from_millis(30),
-            )),
-            animation_sheets.add(SpriteSheetAnimation::from_range(
-                34..=34,
-                Duration::from_millis(30),
-            )),
-        ];
-
         commands
             .spawn_bundle(SpriteSheetBundle {
-                texture_atlas: textures.add(TextureAtlas::from_grid(
-                    game_assets.player_sprite_sheet.clone(),
-                    Vec2::new(48.0, 48.0),
-                    35,
-                    1,
-                )),
+                texture_atlas: game_assets.player_atlas.clone(),
                 ..Default::default()
             })
             .insert(animations.idle.clone())
