@@ -75,7 +75,7 @@ pub fn handle_input(
     }
 
     if keys.pressed(KeyCode::Left) {
-        if player.direction != PlayerDirection::Left {
+        if player.direction != PlayerDirection::Left && velocity.y == 0.0 {
             direction_change_event.send(DirectionChangeEvent {
                 position: position.value,
                 new_direction: PlayerDirection::Left,
@@ -85,7 +85,7 @@ pub fn handle_input(
         player.direction = PlayerDirection::Left;
         velocity.x = (velocity.x - top_speed_rate * time_delta).max(-top_speed);
     } else if keys.pressed(KeyCode::Right) {
-        if player.direction != PlayerDirection::Right {
+        if player.direction != PlayerDirection::Right && velocity.y == 0.0 {
             direction_change_event.send(DirectionChangeEvent {
                 position: position.value,
                 new_direction: PlayerDirection::Right,
