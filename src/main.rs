@@ -22,6 +22,6 @@ fn main() {
         //     safety_margin: std::time::Duration::from_micros(100),
         //     power_saver: bevy_framepace::PowerSaver::Disabled,
         // })
-        .add_system(bevy::input::system::exit_on_esc_system.system())
+        .add_system(bevy::input::system::exit_on_esc_system)
         .run();
 }
