@@ -183,6 +183,15 @@ pub fn setup_animations(
     ];
 }
 
+fn get_entities<'a>(
+    entities: &'a Query<(&Transform, &EntityInstance), Added<EntityInstance>>,
+    identifier: &str,
+) -> Vec<(&'a Transform, &'a EntityInstance)> {
+    entities
+        .iter()
+        .filter(|(_, instance)| instance.identifier == identifier)
+        .collect::<Vec<_>>()
+}
 
 pub fn setup_entities(
     stats: Res<StatsRes>,
@@ -192,10 +201,7 @@ pub fn setup_entities(
     mut commands: Commands,
     entities: Query<(&Transform, &EntityInstance), Added<EntityInstance>>,
 ) {
-    let player_entities = entities
-        .iter()
-        .filter(|(_, instance)| instance.identifier == "Player")
-        .collect::<Vec<_>>();
+    let player_entities = get_entities(&entities, "Player");
 
     if !player_entities.is_empty() {
         // Prepare Player Positions Resource
@@ -245,10 +251,7 @@ pub fn setup_entities(
             .insert(GameStateEntity);
     }
 
-    let goal_entities = entities
-        .iter()
-        .filter(|(_, instance)| instance.identifier == "Goal")
-        .collect::<Vec<_>>();
+    let goal_entities = get_entities(&entities, "Goal");
 
     if !goal_entities.is_empty() {
         let (goal_transform, goal_entity) = goal_entities[0];
@@ -257,7 +260,6 @@ pub fn setup_entities(
             .spawn_bundle(SpriteBundle {
                 visibility: Visibility { is_visible: false },
                 sprite: Sprite {
-                    color: Color::WHITE,
                     custom_size: Some(Vec2::new(
                         goal_entity.width as f32,
                         goal_entity.height as f32,
@@ -274,10 +276,7 @@ pub fn setup_entities(
             .insert(GameStateEntity);
     }
 
-    let bouncer_entities = entities
-        .iter()
-        .filter(|(_, instance)| instance.identifier == "Bouncer")
-        .collect::<Vec<_>>();
+    let bouncer_entities = get_entities(&entities, "Bouncer");
 
     for bouncer_entity in bouncer_entities {
         let (bouncer_transform, bouncer_entity) = bouncer_entity;
@@ -286,7 +285,6 @@ pub fn setup_entities(
             .spawn_bundle(SpriteBundle {
                 visibility: Visibility { is_visible: false },
                 sprite: Sprite {
-                    color: Color::WHITE,
                     custom_size: Some(Vec2::new(
                         bouncer_entity.width as f32,
                         bouncer_entity.height as f32,
