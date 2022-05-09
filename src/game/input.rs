@@ -5,7 +5,7 @@ use crate::{stats::StatsRes, GameState};
 use super::{
     bouncer,
     events::{DirectionChangeEvent, JumpEvent},
-    Player, PlayerDirection, Position, Velocity, GRAVITY,
+    Player, PlayerDirection, Position, Velocity,
 };
 
 const COYOTE_TIME: f64 = 0.125; // seconds after falling from a platform that still can jump
