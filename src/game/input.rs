@@ -40,7 +40,6 @@ pub fn handle_input(
 
     if let Some(last_ground_time) = player.last_ground_time {
         // Player is in the ground
-        let jump_force = jump_force - GRAVITY * time_delta; // Correct by gravity… why?? I don't remember :facepalm:
         let is_in_jump_window = time.seconds_since_startup() < last_ground_time + COYOTE_TIME;
         let is_buffered_jump_valid = player.is_buffered_jump_valid(time.seconds_since_startup());
         let can_jump =
