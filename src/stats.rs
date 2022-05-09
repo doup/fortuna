@@ -3,11 +3,11 @@ use rand::{
     Rng,
 };
 
-use crate::game::{GRAVITY, PLAYER_HEIGHT};
+use crate::game::{GRAVITY, TILE_SIZE};
 
 // RUN
-const RUN_TOP_SPEED_STRONG: f32 = 180.0;
-const RUN_TOP_SPEED_WEAK: f32 = 150.0;
+const RUN_TOP_SPEED_STRONG: f32 = 160.0;
+const RUN_TOP_SPEED_WEAK: f32 = 140.0;
 const RUN_TOP_SPEED_DEPRESSED: f32 = 80.0;
 const RUN_TOP_SPEED_TIME: f32 = 100.0; // Time in ms to get to top speed
 const RUN_STOP_TIME: f32 = 50.0; // Time in ms to stop
@@ -19,12 +19,10 @@ const RUN_TOP_SPEED_RATE_DEPRESSED: f32 = RUN_TOP_SPEED_DEPRESSED / (RUN_TOP_SPE
 const RUN_STOP_RATE_DEPRESSED: f32 = RUN_TOP_SPEED_DEPRESSED / (RUN_STOP_TIME / 1000.0);
 
 // JUMP
-const JUMP_HEIGHT_STRONG: f32 = 4.0; // Height in "Player Heights"
-const JUMP_HEIGHT_STRONG_PX: f32 = (JUMP_HEIGHT_STRONG - 1.0) * PLAYER_HEIGHT;
-const JUMP_HEIGHT_WEAK: f32 = 3.0; // Height in "Player Heights"
-const JUMP_HEIGHT_WEAK_PX: f32 = (JUMP_HEIGHT_WEAK - 1.0) * PLAYER_HEIGHT;
-const JUMP_HEIGHT_DEPRESSED: f32 = 2.0; // Height in "Player Heights"
-const JUMP_HEIGHT_DEPRESSED_PX: f32 = (JUMP_HEIGHT_DEPRESSED - 1.0) * PLAYER_HEIGHT;
+const JUMP_CLEARANCE: f32 = 12.0;
+const JUMP_HEIGHT_WEAK_PX: f32 = 5.0 * TILE_SIZE + JUMP_CLEARANCE; // (4 tiles hall + 1 ground) (5 * 16px = 80px) + Clearance
+const JUMP_HEIGHT_STRONG_PX: f32 = 6.0 * TILE_SIZE + JUMP_CLEARANCE; // +0.75 tile
+const JUMP_HEIGHT_DEPRESSED_PX: f32 = 5.0 * TILE_SIZE + 6.0; // Barely any clearance (2px) for 5 tiles
 
 // DEPRESSIVE STATE
 const MIN_DEPRE_CHANCE: f64 = 0.15;
